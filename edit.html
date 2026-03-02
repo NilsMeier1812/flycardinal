@@ -43,6 +43,7 @@
 </head>
 <body>
 
+    <!-- LOGIN BEREICH -->
     <div id="login-section">
         <h3>Login</h3>
         <input type="email" id="email" placeholder="E-Mail" required>
@@ -56,6 +57,7 @@
         <div id="login-error" style="color: red;"></div>
     </div>
 
+    <!-- APP BEREICH (Karte & Formular) -->
     <div id="app-section" class="hidden">
         <div id="sidebar">
             <h3>Neuen Flug eintragen</h3>
@@ -83,20 +85,16 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        
-        // NEU: GoogleAuthProvider und signInWithPopup importiert
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // ==========================================
-        // DEINE FIREBASE DATEN HIER EINTRAGEN
-        // ==========================================
+        // Deine Firebase-Konfiguration
         const firebaseConfig = {
-            apiKey: "DEIN_API_KEY_HIER",
-            authDomain: "DEIN_PROJEKT.firebaseapp.com",
-            projectId: "DEIN_PROJEKT_ID",
-            storageBucket: "DEIN_PROJEKT.appspot.com",
-            messagingSenderId: "DEINE_SENDER_ID",
-            appId: "DEINE_APP_ID"
+            apiKey: "AIzaSyA9ONDoCc-PahLWVkvECTZz1E9U8dpjgPc",
+            authDomain: "flycardinal-a3635.firebaseapp.com",
+            projectId: "flycardinal-a3635",
+            storageBucket: "flycardinal-a3635.firebasestorage.app",
+            messagingSenderId: "47686059980",
+            appId: "1:47686059980:web:39711435422c3447ecbf69"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -112,12 +110,10 @@
         // --- AUTHENTIFIZIERUNG ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Eingeloggt -> Zeige App
                 loginSection.classList.add('hidden');
                 appSection.classList.remove('hidden');
                 initMap();
             } else {
-                // Ausgeloggt -> Zeige Login
                 loginSection.classList.remove('hidden');
                 appSection.classList.add('hidden');
             }
@@ -131,7 +127,7 @@
                 .catch((error) => { loginError.textContent = "Falsche E-Mail oder Passwort."; });
         });
 
-        // NEU: Google Login
+        // Google Login
         const googleProvider = new GoogleAuthProvider();
         document.getElementById('googleLoginBtn').addEventListener('click', () => {
             signInWithPopup(auth, googleProvider)
