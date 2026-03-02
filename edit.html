@@ -4,90 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flug Eintragen (Intern)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f9; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         .hidden { display: none !important; }
-        
-        /* Login Bereich */
-        #login-section { max-width: 300px; margin: 100px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
-        
-        /* App Bereich */
-        #app-section { display: flex; gap: 20px; }
-        #sidebar { width: 350px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: fit-content; text-align: left; }
-        #map { flex-grow: 1; height: 700px; border: 2px solid #ccc; border-radius: 8px; }
-        
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input, textarea { width: 100%; padding: 8px; box-sizing: border-box; margin-bottom: 10px; }
-        
-        button { width: 100%; padding: 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-bottom: 10px; font-weight: bold; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        
-        #loginBtn { background-color: #28a745; }
-        #loginBtn:hover { background-color: #218838; }
-        
-        #googleLoginBtn { background-color: #4285F4; }
-        #googleLoginBtn:hover { background-color: #357AE8; }
-        
-        #saveBtn { background-color: #28a745; }
-        #saveBtn:hover { background-color: #218838; }
-        
-        #logoutBtn { background-color: #dc3545; }
-        #logoutBtn:hover { background-color: #c82333; }
-        
-        #status, #login-error { margin-top: 10px; font-weight: bold; font-size: 14px; text-align: center; }
-        
-        .divider { margin: 15px 0; border: 0; border-top: 1px solid #ddd; }
+        .input-field { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; outline: none; transition: border-color 0.2s; }
+        .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .label { display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.25rem; }
     </style>
 </head>
-<body>
+<body class="min-h-screen">
 
     <!-- LOGIN BEREICH -->
-    <div id="login-section">
-        <h3>Login</h3>
-        <input type="email" id="email" placeholder="E-Mail" required>
-        <input type="password" id="password" placeholder="Passwort" required>
-        <button id="loginBtn">Mit E-Mail einloggen</button>
-        
-        <hr class="divider">
-        
-        <button id="googleLoginBtn">Mit Google anmelden</button>
-        
-        <div id="login-error" style="color: red;"></div>
+    <div id="login-section" class="flex items-center justify-center h-screen px-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full">
+            <h3 class="text-2xl font-bold text-center mb-6 text-gray-800">Login</h3>
+            <div class="space-y-4">
+                <input type="email" id="email" placeholder="E-Mail Adresse" class="input-field" required>
+                <input type="password" id="password" placeholder="Passwort" class="input-field" required>
+                <button id="loginBtn" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg transition-colors">Mit E-Mail einloggen</button>
+                
+                <div class="flex items-center my-4">
+                    <div class="flex-grow border-t border-gray-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">oder</span>
+                    <div class="flex-grow border-t border-gray-200"></div>
+                </div>
+                
+                <button id="googleLoginBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
+                    Mit Google anmelden
+                </button>
+            </div>
+            <div id="login-error" class="text-red-500 text-center mt-4 text-sm font-semibold"></div>
+        </div>
     </div>
 
     <!-- APP BEREICH (Karte & Formular) -->
-    <div id="app-section" class="hidden">
-        <div id="sidebar">
-            <h3>Neuen Flug eintragen</h3>
-            <div class="form-group">
-                <label for="icao">Ziel-Flughafen (ICAO):</label>
-                <input type="text" id="icao" placeholder="z.B. EDDM" required>
+    <div id="app-section" class="hidden h-screen flex flex-col md:flex-row p-4 gap-4">
+        
+        <!-- Sidebar Formular -->
+        <div id="sidebar" class="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-xl overflow-y-auto relative flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-800">Flug eintragen</h3>
+                <a href="/" class="text-sm text-blue-500 hover:underline">Zurück zur Karte</a>
             </div>
-            <div class="form-group">
-                <label for="date">Datum:</label>
-                <input type="date" id="date" required>
+            
+            <div class="space-y-5 flex-grow">
+                <!-- Start -->
+                <div>
+                    <label class="label" for="fromIcao">Start-Flughafen (ICAO)</label>
+                    <input type="text" id="fromIcao" placeholder="z.B. EDDF" class="input-field uppercase" maxlength="4" required>
+                    <div id="fromResult" class="text-xs mt-1 h-4 text-gray-500 font-medium"></div>
+                </div>
+
+                <!-- Ziel -->
+                <div>
+                    <label class="label" for="toIcao">Ziel-Flughafen (ICAO)</label>
+                    <input type="text" id="toIcao" placeholder="z.B. EDDM" class="input-field uppercase" maxlength="4" required>
+                    <div id="toResult" class="text-xs mt-1 h-4 text-gray-500 font-medium"></div>
+                </div>
+
+                <!-- Datum & Zeiten -->
+                <div class="grid grid-cols-1 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div>
+                        <label class="label" for="date">Datum</label>
+                        <input type="date" id="date" class="input-field bg-white" required>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="w-1/2">
+                            <label class="label" for="startTime">Startzeit (opt.)</label>
+                            <input type="time" id="startTime" class="input-field bg-white">
+                        </div>
+                        <div class="w-1/2">
+                            <label class="label" for="endTime">Landezeit (opt.)</label>
+                            <input type="time" id="endTime" class="input-field bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notizen -->
+                <div>
+                    <label class="label" for="notes">Notizen / Flugnummer</label>
+                    <textarea id="notes" rows="2" placeholder="Besonderheiten, Callsign..." class="input-field resize-none"></textarea>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="notes">Notizen / Flugnummer:</label>
-                <textarea id="notes" rows="3" placeholder="Infos zum Flug..."></textarea>
+
+            <!-- Buttons am Ende der Sidebar -->
+            <div class="mt-6 space-y-3">
+                <button id="saveBtn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow transition-colors disabled:opacity-50">
+                    Flug in Datenbank speichern
+                </button>
+                <div id="status" class="text-center text-sm font-semibold h-5"></div>
+                <hr class="border-gray-200">
+                <button id="logoutBtn" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg transition-colors text-sm">
+                    Abmelden
+                </button>
             </div>
-            <button id="saveBtn">Flug speichern</button>
-            <div id="status"></div>
-            <hr class="divider">
-            <button id="logoutBtn">Abmelden</button>
         </div>
-        <div id="map"></div>
+
+        <!-- Map -->
+        <div class="flex-grow rounded-2xl overflow-hidden shadow-xl border border-gray-200 min-h-[400px]">
+            <div id="map" class="w-full h-full"></div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        // NEU: doc, setDoc, getDoc, increment importiert
+        import { getFirestore, collection, addDoc, doc, setDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // Deine Firebase-Konfiguration
         const firebaseConfig = {
             apiKey: "AIzaSyA9ONDoCc-PahLWVkvECTZz1E9U8dpjgPc",
             authDomain: "flycardinal-a3635.firebaseapp.com",
@@ -100,9 +130,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const flightsCollection = collection(db, "flights");
 
-        // UI Elemente
         const loginSection = document.getElementById('login-section');
         const appSection = document.getElementById('app-section');
         const loginError = document.getElementById('login-error');
@@ -113,115 +141,186 @@
                 loginSection.classList.add('hidden');
                 appSection.classList.remove('hidden');
                 initMap();
+                document.getElementById('date').valueAsDate = new Date(); // Setzt aktuelles Datum
             } else {
                 loginSection.classList.remove('hidden');
                 appSection.classList.add('hidden');
             }
         });
 
-        // E-Mail Login
         document.getElementById('loginBtn').addEventListener('click', () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            signInWithEmailAndPassword(auth, email, password)
-                .catch((error) => { loginError.textContent = "Falsche E-Mail oder Passwort."; });
+            signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
+                .catch(() => { loginError.textContent = "Falsche E-Mail oder Passwort."; });
         });
 
-        // Google Login
         const googleProvider = new GoogleAuthProvider();
         document.getElementById('googleLoginBtn').addEventListener('click', () => {
-            signInWithPopup(auth, googleProvider)
-                .catch((error) => { 
-                    console.error(error);
-                    loginError.textContent = "Fehler beim Google-Login."; 
-                });
+            signInWithPopup(auth, googleProvider).catch((e) => { console.error(e); loginError.textContent = "Fehler beim Google-Login."; });
         });
 
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            signOut(auth);
-        });
+        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
-        // --- KARTE & SPEICHERN ---
+        // --- KARTE ---
         let map;
-        let mapMarkers = [];
-        let allFlights = [];
         let isMapInitialized = false;
 
         function initMap() {
             if (isMapInitialized) return;
-            map = L.map('map').setView([50.0, 10.0], 4);
+            map = L.map('map').setView([50.0, 10.0], 5);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
             isMapInitialized = true;
-
-            onSnapshot(flightsCollection, (snapshot) => {
-                allFlights = [];
-                snapshot.forEach((doc) => { allFlights.push({ id: doc.id, ...doc.data() }); });
-                updateMap();
-            });
         }
 
+        // --- ICAO VALIDIERUNG (Subtiles Feature) ---
+        let resolvedLocations = {}; // Cache für diese Session { 'EDDM': { name, lat, lon } }
+
+        async function validateIcao(inputId, resultId) {
+            const inputField = document.getElementById(inputId);
+            const resultDiv = document.getElementById(resultId);
+            const icao = inputField.value.toUpperCase().trim();
+
+            if (icao.length !== 4) {
+                resultDiv.innerHTML = "";
+                inputField.classList.remove('border-green-500');
+                return null;
+            }
+
+            resultDiv.innerHTML = `<span class="text-blue-500">Prüfe...</span>`;
+
+            // 1. Prüfe, ob wir ihn schon im lokalen Cache haben
+            if (resolvedLocations[icao]) {
+                showValidationSuccess(inputField, resultDiv, resolvedLocations[icao].name);
+                return resolvedLocations[icao];
+            }
+
+            try {
+                // 2. Prüfe in Firebase 'locations' Collection (sehr schnell)
+                const docRef = doc(db, "locations", icao);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    resolvedLocations[icao] = data;
+                    showValidationSuccess(inputField, resultDiv, data.name);
+                    
+                    // Karte zentrieren (optional)
+                    if(inputId === 'toIcao') map.setView([data.lat, data.lon], 8);
+                    return data;
+                }
+
+                // 3. Wenn nicht in Firebase, suche bei Overpass API
+                const query = `[out:json];(node["icao"="${icao}"];way["icao"="${icao}"];relation["icao"="${icao}"];);out center;`;
+                const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data.elements && data.elements.length > 0) {
+                    const element = data.elements[0];
+                    const lat = element.lat || element.center.lat;
+                    const lon = element.lon || element.center.lon;
+                    const name = element.tags.name || "Unbekannter Flughafen";
+                    
+                    const locData = { name, lat, lon };
+                    resolvedLocations[icao] = locData;
+                    showValidationSuccess(inputField, resultDiv, name);
+                    
+                    if(inputId === 'toIcao') map.setView([lat, lon], 8);
+                    return locData;
+                } else {
+                    resultDiv.innerHTML = `<span class="text-red-500">Flughafen nicht gefunden.</span>`;
+                    inputField.classList.remove('border-green-500');
+                    return null;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="text-yellow-500">Konnte nicht verifiziert werden.</span>`;
+                return null;
+            }
+        }
+
+        function showValidationSuccess(inputField, resultDiv, name) {
+            resultDiv.innerHTML = `<span class="text-green-600 font-bold">✓</span> ${name}`;
+            inputField.classList.add('border-green-500');
+        }
+
+        // Event-Listener für Eingabe (feuert, wenn der Nutzer tippt)
+        document.getElementById('fromIcao').addEventListener('input', () => validateIcao('fromIcao', 'fromResult'));
+        document.getElementById('toIcao').addEventListener('input', () => validateIcao('toIcao', 'toResult'));
+
+        // --- SPEICHERN ---
         async function saveFlight() {
-            const icaoInput = document.getElementById('icao').value.toUpperCase().trim();
+            const fromIcao = document.getElementById('fromIcao').value.toUpperCase().trim();
+            const toIcao = document.getElementById('toIcao').value.toUpperCase().trim();
             const dateInput = document.getElementById('date').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
             const notesInput = document.getElementById('notes').value.trim();
+            
             const statusDiv = document.getElementById('status');
             const saveBtn = document.getElementById('saveBtn');
 
-            if (!icaoInput || !dateInput) {
-                statusDiv.textContent = "Bitte ICAO und Datum ausfüllen!";
-                statusDiv.style.color = "red"; return;
+            if (!fromIcao || !toIcao || !dateInput) {
+                statusDiv.textContent = "Bitte Start, Ziel und Datum ausfüllen!";
+                statusDiv.className = "text-center text-sm font-semibold h-5 text-red-500";
+                return;
             }
 
             saveBtn.disabled = true;
-            statusDiv.textContent = "Speichere in Firebase...";
-            statusDiv.style.color = "blue";
+            statusDiv.textContent = "Speichere...";
+            statusDiv.className = "text-center text-sm font-semibold h-5 text-blue-500 animate-pulse";
 
             try {
-                let lat, lon, airportName;
-                const existingFlight = allFlights.find(f => f.icao === icaoInput);
+                // Stelle sicher, dass die Geodaten geladen sind (falls Nutzer zu schnell klickt)
+                let fromLoc = resolvedLocations[fromIcao] || await validateIcao('fromIcao', 'fromResult');
+                let toLoc = resolvedLocations[toIcao] || await validateIcao('toIcao', 'toResult');
 
-                if (existingFlight) {
-                    lat = existingFlight.lat; lon = existingFlight.lon; airportName = existingFlight.name;
-                } else {
-                    const query = `[out:json];(node["icao"="${icaoInput}"];way["icao"="${icaoInput}"];relation["icao"="${icaoInput}"];);out center;`;
-                    const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
-                    const data = await response.json();
+                if (!fromLoc || !toLoc) throw new Error("Flughäfen konnten nicht aufgelöst werden.");
 
-                    if (data.elements && data.elements.length > 0) {
-                        const element = data.elements[0];
-                        lat = element.lat || element.center.lat;
-                        lon = element.lon || element.center.lon;
-                        airportName = element.tags.name || "Unbekannter Flughafen";
-                    } else { throw new Error("Flughafen nicht gefunden"); }
-                }
+                // 1. Locations Collection aktualisieren (merge: true aktualisiert nur bestimmte Felder)
+                await setDoc(doc(db, "locations", fromIcao), {
+                    name: fromLoc.name, lat: fromLoc.lat, lon: fromLoc.lon, 
+                    departures: increment(1) // Zählt Starts hoch
+                }, { merge: true });
 
-                await addDoc(flightsCollection, {
-                    icao: icaoInput, date: dateInput, notes: notesInput, lat: lat, lon: lon, name: airportName, timestamp: new Date()
+                await setDoc(doc(db, "locations", toIcao), {
+                    name: toLoc.name, lat: toLoc.lat, lon: toLoc.lon, 
+                    landings: increment(1) // Zählt Landungen hoch
+                }, { merge: true });
+
+                // 2. Flug-Dokument speichern
+                await addDoc(collection(db, "flights"), {
+                    fromIcao: fromIcao,
+                    toIcao: toIcao,
+                    date: dateInput,
+                    startTime: startTime,
+                    endTime: endTime,
+                    notes: notesInput,
+                    timestamp: new Date()
                 });
 
-                statusDiv.textContent = "Gespeichert!"; statusDiv.style.color = "green";
-                document.getElementById('icao').value = ""; document.getElementById('notes').value = "";
-                map.setView([lat, lon], 8); 
+                statusDiv.textContent = "Erfolgreich gespeichert!";
+                statusDiv.className = "text-center text-sm font-semibold h-5 text-green-500";
+                
+                // Formular zurücksetzen (Datum bleibt)
+                document.getElementById('fromIcao').value = ""; document.getElementById('fromResult').innerHTML = "";
+                document.getElementById('toIcao').value = ""; document.getElementById('toResult').innerHTML = "";
+                document.getElementById('startTime').value = ""; document.getElementById('endTime').value = "";
+                document.getElementById('notes').value = "";
+                document.getElementById('fromIcao').classList.remove('border-green-500');
+                document.getElementById('toIcao').classList.remove('border-green-500');
+                
+                // Kurze Erfolgsmeldung in der Karte zeigen
+                L.popup().setLatLng([toLoc.lat, toLoc.lon]).setContent(`<b>${toIcao}</b><br>Flug gespeichert!`).openOn(map);
 
             } catch (error) {
-                statusDiv.textContent = "Fehler beim Speichern!"; statusDiv.style.color = "red";
+                console.error("Speicherfehler:", error);
+                statusDiv.textContent = "Fehler beim Speichern!";
+                statusDiv.className = "text-center text-sm font-semibold h-5 text-red-500";
             } finally {
                 saveBtn.disabled = false;
-                setTimeout(() => statusDiv.textContent = "", 4000);
+                setTimeout(() => { if(statusDiv.textContent.includes("Erfolgreich")) statusDiv.textContent = ""; }, 4000);
             }
         }
 
         document.getElementById('saveBtn').addEventListener('click', saveFlight);
-
-        function updateMap() {
-            mapMarkers.forEach(marker => map.removeLayer(marker));
-            mapMarkers = [];
-            allFlights.forEach(flight => {
-                const marker = L.marker([flight.lat, flight.lon]).addTo(map);
-                mapMarkers.push(marker);
-            });
-        }
     </script>
 </body>
 </html>
