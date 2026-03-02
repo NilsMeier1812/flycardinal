@@ -10,22 +10,35 @@
         .hidden { display: none !important; }
         
         /* Login Bereich */
-        #login-section { max-width: 300px; margin: 100px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #login-section { max-width: 300px; margin: 100px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
         
         /* App Bereich */
         #app-section { display: flex; gap: 20px; }
-        #sidebar { width: 350px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: fit-content; }
+        #sidebar { width: 350px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: fit-content; text-align: left; }
         #map { flex-grow: 1; height: 700px; border: 2px solid #ccc; border-radius: 8px; }
         
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; }
         input, textarea { width: 100%; padding: 8px; box-sizing: border-box; margin-bottom: 10px; }
-        button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-bottom: 10px; }
-        button:hover { background-color: #218838; }
+        
+        button { width: 100%; padding: 10px; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-bottom: 10px; font-weight: bold; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
+        
+        #loginBtn { background-color: #28a745; }
+        #loginBtn:hover { background-color: #218838; }
+        
+        #googleLoginBtn { background-color: #4285F4; }
+        #googleLoginBtn:hover { background-color: #357AE8; }
+        
+        #saveBtn { background-color: #28a745; }
+        #saveBtn:hover { background-color: #218838; }
+        
         #logoutBtn { background-color: #dc3545; }
         #logoutBtn:hover { background-color: #c82333; }
+        
         #status, #login-error { margin-top: 10px; font-weight: bold; font-size: 14px; text-align: center; }
+        
+        .divider { margin: 15px 0; border: 0; border-top: 1px solid #ddd; }
     </style>
 </head>
 <body>
@@ -34,7 +47,12 @@
         <h3>Login</h3>
         <input type="email" id="email" placeholder="E-Mail" required>
         <input type="password" id="password" placeholder="Passwort" required>
-        <button id="loginBtn">Einloggen</button>
+        <button id="loginBtn">Mit E-Mail einloggen</button>
+        
+        <hr class="divider">
+        
+        <button id="googleLoginBtn">Mit Google anmelden</button>
+        
         <div id="login-error" style="color: red;"></div>
     </div>
 
@@ -55,7 +73,7 @@
             </div>
             <button id="saveBtn">Flug speichern</button>
             <div id="status"></div>
-            <hr>
+            <hr class="divider">
             <button id="logoutBtn">Abmelden</button>
         </div>
         <div id="map"></div>
@@ -65,7 +83,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        
+        // NEU: GoogleAuthProvider und signInWithPopup importiert
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         // ==========================================
         // DEINE FIREBASE DATEN HIER EINTRAGEN
@@ -95,7 +115,7 @@
                 // Eingeloggt -> Zeige App
                 loginSection.classList.add('hidden');
                 appSection.classList.remove('hidden');
-                initMap(); // Karte erst laden, wenn Container sichtbar ist
+                initMap();
             } else {
                 // Ausgeloggt -> Zeige Login
                 loginSection.classList.remove('hidden');
@@ -103,6 +123,7 @@
             }
         });
 
+        // E-Mail Login
         document.getElementById('loginBtn').addEventListener('click', () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -110,6 +131,17 @@
                 .catch((error) => { loginError.textContent = "Falsche E-Mail oder Passwort."; });
         });
 
+        // NEU: Google Login
+        const googleProvider = new GoogleAuthProvider();
+        document.getElementById('googleLoginBtn').addEventListener('click', () => {
+            signInWithPopup(auth, googleProvider)
+                .catch((error) => { 
+                    console.error(error);
+                    loginError.textContent = "Fehler beim Google-Login."; 
+                });
+        });
+
+        // Logout
         document.getElementById('logoutBtn').addEventListener('click', () => {
             signOut(auth);
         });
