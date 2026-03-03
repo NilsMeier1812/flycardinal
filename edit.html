@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flug Eintragen (Intern)</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
@@ -44,8 +42,6 @@
 
     <!-- APP BEREICH (Karte & Formular) -->
     <div id="app-section" class="hidden h-screen flex flex-col md:flex-row p-4 gap-4">
-        
-        <!-- Sidebar Formular -->
         <div id="sidebar" class="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-xl overflow-y-auto relative flex flex-col">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-800">Flug eintragen</h3>
@@ -53,21 +49,18 @@
             </div>
             
             <div class="space-y-5 flex-grow">
-                <!-- Start -->
                 <div>
                     <label class="label" for="fromIcao">Start-Flughafen (ICAO)</label>
                     <input type="text" id="fromIcao" placeholder="z.B. EDDF" class="input-field uppercase" maxlength="4" required>
                     <div id="fromResult" class="text-xs mt-1 h-4 text-gray-500 font-medium"></div>
                 </div>
 
-                <!-- Ziel -->
                 <div>
                     <label class="label" for="toIcao">Ziel-Flughafen (ICAO)</label>
                     <input type="text" id="toIcao" placeholder="z.B. EDDM" class="input-field uppercase" maxlength="4" required>
                     <div id="toResult" class="text-xs mt-1 h-4 text-gray-500 font-medium"></div>
                 </div>
 
-                <!-- Datum & Zeiten -->
                 <div class="grid grid-cols-1 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <div>
                         <label class="label" for="date">Datum</label>
@@ -85,14 +78,12 @@
                     </div>
                 </div>
 
-                <!-- Notizen -->
                 <div>
                     <label class="label" for="notes">Notizen / Flugnummer</label>
                     <textarea id="notes" rows="2" placeholder="Besonderheiten, Callsign..." class="input-field resize-none"></textarea>
                 </div>
             </div>
 
-            <!-- Buttons am Ende der Sidebar -->
             <div class="mt-6 space-y-3">
                 <button id="saveBtn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow transition-colors disabled:opacity-50">
                     Flug in Datenbank speichern
@@ -105,7 +96,6 @@
             </div>
         </div>
 
-        <!-- Map -->
         <div class="flex-grow rounded-2xl overflow-hidden shadow-xl border border-gray-200 min-h-[400px]">
             <div id="map" class="w-full h-full"></div>
         </div>
@@ -114,7 +104,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        // NEU: doc, setDoc, getDoc, increment importiert
         import { getFirestore, collection, addDoc, doc, setDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
@@ -135,13 +124,12 @@
         const appSection = document.getElementById('app-section');
         const loginError = document.getElementById('login-error');
 
-        // --- AUTHENTIFIZIERUNG ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 loginSection.classList.add('hidden');
                 appSection.classList.remove('hidden');
                 initMap();
-                document.getElementById('date').valueAsDate = new Date(); // Setzt aktuelles Datum
+                document.getElementById('date').valueAsDate = new Date();
             } else {
                 loginSection.classList.remove('hidden');
                 appSection.classList.add('hidden');
@@ -160,7 +148,6 @@
 
         document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
 
-        // --- KARTE ---
         let map;
         let isMapInitialized = false;
 
@@ -171,8 +158,7 @@
             isMapInitialized = true;
         }
 
-        // --- ICAO VALIDIERUNG (Subtiles Feature) ---
-        let resolvedLocations = {}; // Cache für diese Session { 'EDDM': { name, lat, lon } }
+        let resolvedLocations = {}; 
 
         async function validateIcao(inputId, resultId) {
             const inputField = document.getElementById(inputId);
@@ -187,28 +173,30 @@
 
             resultDiv.innerHTML = `<span class="text-blue-500">Prüfe...</span>`;
 
-            // 1. Prüfe, ob wir ihn schon im lokalen Cache haben
             if (resolvedLocations[icao]) {
                 showValidationSuccess(inputField, resultDiv, resolvedLocations[icao].name);
                 return resolvedLocations[icao];
             }
 
+            // LÖSUNG: Try-Catch Block getrennt! Falls Firebase wegen Regeln noch zickt, bricht nicht das ganze Script ab.
+            let docSnap = null;
             try {
-                // 2. Prüfe in Firebase 'locations' Collection (sehr schnell)
                 const docRef = doc(db, "locations", icao);
-                const docSnap = await getDoc(docRef);
+                docSnap = await getDoc(docRef);
+            } catch (error) {
+                console.warn("Firebase-Zugriff verweigert (Regeln laden noch?), suche online weiter...");
+            }
 
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    resolvedLocations[icao] = data;
-                    showValidationSuccess(inputField, resultDiv, data.name);
-                    
-                    // Karte zentrieren (optional)
-                    if(inputId === 'toIcao') map.setView([data.lat, data.lon], 8);
-                    return data;
-                }
+            if (docSnap && docSnap.exists()) {
+                const data = docSnap.data();
+                resolvedLocations[icao] = data;
+                showValidationSuccess(inputField, resultDiv, data.name);
+                if(inputId === 'toIcao') map.setView([data.lat, data.lon], 8);
+                return data;
+            }
 
-                // 3. Wenn nicht in Firebase, suche bei Overpass API
+            // Wenn nicht in Firebase gefunden oder Firebase blockiert hat, suche bei Overpass API
+            try {
                 const query = `[out:json];(node["icao"="${icao}"];way["icao"="${icao}"];relation["icao"="${icao}"];);out center;`;
                 const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
                 const data = await response.json();
@@ -231,7 +219,7 @@
                     return null;
                 }
             } catch (error) {
-                resultDiv.innerHTML = `<span class="text-yellow-500">Konnte nicht verifiziert werden.</span>`;
+                resultDiv.innerHTML = `<span class="text-yellow-500">API Timeout. Konnte nicht verifiziert werden.</span>`;
                 return null;
             }
         }
@@ -241,11 +229,9 @@
             inputField.classList.add('border-green-500');
         }
 
-        // Event-Listener für Eingabe (feuert, wenn der Nutzer tippt)
         document.getElementById('fromIcao').addEventListener('input', () => validateIcao('fromIcao', 'fromResult'));
         document.getElementById('toIcao').addEventListener('input', () => validateIcao('toIcao', 'toResult'));
 
-        // --- SPEICHERN ---
         async function saveFlight() {
             const fromIcao = document.getElementById('fromIcao').value.toUpperCase().trim();
             const toIcao = document.getElementById('toIcao').value.toUpperCase().trim();
@@ -268,24 +254,26 @@
             statusDiv.className = "text-center text-sm font-semibold h-5 text-blue-500 animate-pulse";
 
             try {
-                // Stelle sicher, dass die Geodaten geladen sind (falls Nutzer zu schnell klickt)
                 let fromLoc = resolvedLocations[fromIcao] || await validateIcao('fromIcao', 'fromResult');
                 let toLoc = resolvedLocations[toIcao] || await validateIcao('toIcao', 'toResult');
 
-                if (!fromLoc || !toLoc) throw new Error("Flughäfen konnten nicht aufgelöst werden.");
+                if (!fromLoc || !toLoc) {
+                    statusDiv.textContent = "Flughafen ungültig oder nicht gefunden!";
+                    statusDiv.className = "text-center text-sm font-semibold h-5 text-red-500";
+                    saveBtn.disabled = false;
+                    return;
+                }
 
-                // 1. Locations Collection aktualisieren (merge: true aktualisiert nur bestimmte Felder)
                 await setDoc(doc(db, "locations", fromIcao), {
                     name: fromLoc.name, lat: fromLoc.lat, lon: fromLoc.lon, 
-                    departures: increment(1) // Zählt Starts hoch
+                    departures: increment(1)
                 }, { merge: true });
 
                 await setDoc(doc(db, "locations", toIcao), {
                     name: toLoc.name, lat: toLoc.lat, lon: toLoc.lon, 
-                    landings: increment(1) // Zählt Landungen hoch
+                    landings: increment(1)
                 }, { merge: true });
 
-                // 2. Flug-Dokument speichern
                 await addDoc(collection(db, "flights"), {
                     fromIcao: fromIcao,
                     toIcao: toIcao,
@@ -299,7 +287,6 @@
                 statusDiv.textContent = "Erfolgreich gespeichert!";
                 statusDiv.className = "text-center text-sm font-semibold h-5 text-green-500";
                 
-                // Formular zurücksetzen (Datum bleibt)
                 document.getElementById('fromIcao').value = ""; document.getElementById('fromResult').innerHTML = "";
                 document.getElementById('toIcao').value = ""; document.getElementById('toResult').innerHTML = "";
                 document.getElementById('startTime').value = ""; document.getElementById('endTime').value = "";
@@ -307,7 +294,6 @@
                 document.getElementById('fromIcao').classList.remove('border-green-500');
                 document.getElementById('toIcao').classList.remove('border-green-500');
                 
-                // Kurze Erfolgsmeldung in der Karte zeigen
                 L.popup().setLatLng([toLoc.lat, toLoc.lon]).setContent(`<b>${toIcao}</b><br>Flug gespeichert!`).openOn(map);
 
             } catch (error) {
