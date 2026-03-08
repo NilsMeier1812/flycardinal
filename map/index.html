@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flug-Tagebuch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { background-color: #f3f4f6; margin: 0; padding: 0; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .custom-pin {
+            background-color: #3b82f6; color: white; border-radius: 50%;
+            text-align: center; line-height: 32px; font-weight: bold; font-size: 14px;
+            border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .leaflet-popup { display: none !important; } 
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col p-4">
+
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold text-gray-800">Mein Flug-Tagebuch</h1>
+        <a href="/edit" class="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition-colors text-sm">
+            Zum Edit-Bereich &rarr;
+        </a>
+    </div>
+
+    <div class="flex-grow relative rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white">
+        <div id="map" class="w-full h-full"></div>
+    </div>
+
+    <div id="bottomSheet" class="fixed bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[9999] max-h-[85vh] flex flex-col">
+        <div class="p-4 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white rounded-t-3xl">
+            <div>
+                <h2 id="sheetTitle" class="text-xl font-bold text-gray-800">Flughafen</h2>
+                <p id="sheetSubtitle" class="text-sm text-gray-500">Details werden geladen...</p>
+            </div>
+            <button id="closeSheetBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full p-2 w-10 h-10 flex items-center justify-center transition-colors">
+                ✕
+            </button>
+        </div>
+        <div id="sheetContent" class="p-4 overflow-y-auto flex-grow bg-gray-50"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        // ACHTUNG: orderBy wurde hier entfernt, um das Index-Problem zu beheben
+        import { getFirestore, collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9ONDoCc-PahLWVkvECTZz1E9U8dpjgPc",
+            authDomain: "flycardinal-a3635.firebaseapp.com",
+            projectId: "flycardinal-a3635",
+            storageBucket: "flycardinal-a3635.firebasestorage.app",
+            messagingSenderId: "47686059980",
+            appId: "1:47686059980:web:39711435422c3447ecbf69"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const map = L.map('map', { zoomControl: false }).setView([50.0, 10.0], 5);
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 });
+        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 });
+
+        L.control.layers({ "Standard Karte": osmLayer, "Satellit": satelliteLayer, "Terrain (VFR-Stil)": topoLayer }, null, { position: 'topright' }).addTo(map);
+
+        let mapMarkers = [];
+        let localLocations = {}; // Speichert alle bekannten Orte für schnelle Linien-Berechnung
+        let activeLines = []; // Speichert die gezeichneten Fluglinien
+        let currentActiveMarker = null; // Speichert den aktuell hervorgehobenen Pin
+
+        // Schöne, moderne SVG Pins
+        const defaultPinSVG = `<svg viewBox="0 0 24 24" fill="#3b82f6" class="w-8 h-8 drop-shadow-md"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`;
+        const activePinSVG = `<svg viewBox="0 0 24 24" fill="#ef4444" class="w-10 h-10 drop-shadow-lg"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`;
+
+        const defaultIcon = L.divIcon({ className: 'bg-transparent', html: defaultPinSVG, iconSize: [32, 32], iconAnchor: [16, 32] });
+        const activeIcon = L.divIcon({ className: 'bg-transparent', html: activePinSVG, iconSize: [40, 40], iconAnchor: [20, 40] });
+
+        onSnapshot(collection(db, "locations"), (snapshot) => {
+            mapMarkers.forEach(marker => map.removeLayer(marker));
+            mapMarkers = [];
+            localLocations = {}; // Cache leeren
+
+            snapshot.forEach((doc) => {
+                const loc = doc.data();
+                const icao = doc.id;
+                
+                localLocations[icao] = loc; // Im Cache speichern für Linienberechnung
+
+                // NUR Flughäfen anzeigen, an denen auch gelandet wurde
+                if (!loc.landings || loc.landings === 0) return;
+
+                const marker = L.marker([loc.lat, loc.lon], { icon: defaultIcon }).addTo(map);
+                
+                // Wir übergeben jetzt auch den Marker selbst und die Ziel-Koordinaten
+                marker.on('click', () => openBottomSheet(icao, loc.name, loc.landings, marker, loc.lat, loc.lon));
+                
+                mapMarkers.push(marker);
+            });
+        });
+
+        const bottomSheet = document.getElementById('bottomSheet');
+        const sheetTitle = document.getElementById('sheetTitle');
+        const sheetSubtitle = document.getElementById('sheetSubtitle');
+        const sheetContent = document.getElementById('sheetContent');
+
+        document.getElementById('closeSheetBtn').addEventListener('click', () => {
+            bottomSheet.classList.add('translate-y-full');
+            resetMapHighlights();
+        });
+
+        // Wenn man irgendwo auf die Karte klickt, Sheet schließen und Linien entfernen
+        map.on('click', () => {
+            bottomSheet.classList.add('translate-y-full');
+            resetMapHighlights();
+        });
+
+        function resetMapHighlights() {
+            if (currentActiveMarker) {
+                currentActiveMarker.setIcon(defaultIcon);
+                currentActiveMarker.setZIndexOffset(0);
+                currentActiveMarker = null;
+            }
+            activeLines.forEach(line => map.removeLayer(line));
+            activeLines = [];
+        }
+
+        // Hilfsfunktion: Berechnet eine sanfte, schöne Kurve zwischen zwei Koordinaten
+        function getCurvePoints(lat1, lng1, lat2, lng2) {
+            const mLat = (lat1 + lat2) / 2;
+            const mLng = (lng1 + lng2) / 2;
+            const dLat = lat2 - lat1;
+            const dLng = lng2 - lng1;
+            const curveOffset = 0.2; // Stärke der Kurve
+            const cLat = mLat - dLng * curveOffset;
+            const cLng = mLng + dLat * curveOffset;
+
+            const points = [];
+            for (let t = 0; t <= 1; t += 0.05) {
+                const lat = (1-t)*(1-t)*lat1 + 2*(1-t)*t*cLat + t*t*lat2;
+                const lng = (1-t)*(1-t)*lng1 + 2*(1-t)*t*cLng + t*t*lng2;
+                points.push([lat, lng]);
+            }
+            return points;
+        }
+
+        // Robuste API-Abfrage als Fallback, falls ein Startflughafen im Cache fehlt
+        async function getRobustCoords(icao) {
+            if (localLocations[icao]) return { lat: localLocations[icao].lat, lon: localLocations[icao].lon };
+            try {
+                const query = `[out:json];(node["icao"="${icao}"];way["icao"="${icao}"];relation["icao"="${icao}"];);out center;`;
+                const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                if (data.elements && data.elements.length > 0) {
+                    const el = data.elements[0];
+                    return { lat: el.lat || el.center.lat, lon: el.lon || el.center.lon };
+                }
+            } catch(e) { console.warn("API Fallback Fehler", e); }
+            return null;
+        }
+
+        async function openBottomSheet(icao, name, totalLandings, clickedMarker, toLat, toLon) {
+            // 1. Karte zurücksetzen und neuen Pin hervorheben
+            resetMapHighlights();
+            currentActiveMarker = clickedMarker;
+            if (currentActiveMarker) {
+                currentActiveMarker.setIcon(activeIcon);
+                currentActiveMarker.setZIndexOffset(1000); // In den Vordergrund holen
+            }
+
+            sheetTitle.textContent = `${icao} - ${name}`;
+            sheetSubtitle.textContent = `${totalLandings} Landung${totalLandings !== 1 ? 'en' : ''} verzeichnet`;
+            sheetContent.innerHTML = `<div class="text-center py-10 text-gray-400">Lade Flugdaten...</div>`;
+            bottomSheet.classList.remove('translate-y-full');
+
+            try {
+                const q = query(collection(db, "flights"), where("toIcao", "==", icao));
+                const querySnapshot = await getDocs(q);
+                
+                let flights = [];
+                let uniqueStarts = new Set(); // Um doppelte Linien zu vermeiden
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    flights.push(data);
+                    uniqueStarts.add(data.fromIcao);
+                });
+                
+                flights.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                // 2. Schöne Linien zu den Startflughäfen zeichnen (Robust mit Fallback)
+                for (const fromIcao of uniqueStarts) {
+                    if (fromIcao === icao) continue; // Keine Linie zeichnen, wenn Start = Ziel
+                    
+                    const coords = await getRobustCoords(fromIcao);
+                    if (coords) {
+                        const curve = getCurvePoints(coords.lat, coords.lon, toLat, toLon);
+                        const line = L.polyline(curve, {
+                            color: '#ef4444', // Rote Linie passend zum aktiven Pin
+                            weight: 3,
+                            opacity: 0.8,
+                            dashArray: '8, 8' // Gestrichelt für die Flugroute
+                        }).addTo(map);
+                        activeLines.push(line);
+                    }
+                }
+
+                // 3. HTML aufbauen (eingeklappt mit <details>)
+                let html = '<div class="space-y-3">';
+                
+                if(flights.length === 0) {
+                    html += `<div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-gray-500 text-center">Keine detaillierten Flugdaten gefunden.</div>`;
+                }
+
+                flights.forEach((flight) => {
+                    const formattedDate = new Date(flight.date).toLocaleDateString('de-DE', { weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit' });
+                    
+                    html += `
+                        <details class="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <summary class="p-4 cursor-pointer flex items-center justify-between outline-none hover:bg-gray-50 transition-colors">
+                                <div>
+                                    <div class="text-xs text-blue-500 font-bold uppercase tracking-wider mb-1">${formattedDate}</div>
+                                    <div class="font-bold text-gray-800 flex items-center gap-2">
+                                        <span class="bg-gray-100 px-2 py-1 rounded text-sm border border-gray-200">${flight.fromIcao}</span>
+                                        <span class="text-gray-400">➔</span>
+                                        <span class="bg-blue-50 px-2 py-1 rounded text-sm text-blue-700 border border-blue-100">${flight.toIcao}</span>
+                                    </div>
+                                </div>
+                                <div class="text-gray-400 transform transition-transform duration-200 group-open:rotate-180">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </summary>
+                            <div class="p-4 border-t border-gray-100 bg-gray-50 text-sm text-gray-700">
+                                ${(!flight.startTime && !flight.endTime && !flight.notes) ? '<i class="text-gray-400">Keine weiteren Details hinterlegt.</i>' : ''}
+                                
+                                ${flight.startTime || flight.endTime ? `
+                                    <div class="flex gap-4 mb-2 font-medium">
+                                        ${flight.startTime ? `<div><span class="text-gray-500">Start:</span> ${flight.startTime} Uhr</div>` : ''}
+                                        ${flight.endTime ? `<div><span class="text-gray-500">Landung:</span> ${flight.endTime} Uhr</div>` : ''}
+                                    </div>
+                                ` : ''}
+                                
+                                ${flight.notes ? `<div class="mt-2 text-gray-600 bg-white p-3 rounded border border-gray-100 shadow-sm">" ${flight.notes} "</div>` : ''}
+                            </div>
+                        </details>
+                    `;
+                });
+                
+                html += '</div>';
+                sheetContent.innerHTML = html;
+
+            } catch (error) {
+                console.error("Fehler beim Laden der Flüge:", error);
+                sheetContent.innerHTML = `<div class="text-red-500 text-center p-4">Fehler beim Laden.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
