@@ -108,7 +108,6 @@
     <section id="view-map" class="view-section relative bg-gray-200">
         <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
         
-        <!-- Bottom Sheet Karte -->
         <div id="bottomSheet" class="absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[10] max-h-[85vh] flex flex-col">
             <div class="p-4 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white rounded-t-3xl">
                 <div><h2 id="sheetTitle" class="text-xl font-bold text-gray-800">Flughafen</h2><p id="sheetSubtitle" class="text-sm text-gray-500">Lade...</p></div>
@@ -170,6 +169,7 @@
             <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-4">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6">AeroClub Admin Dashboard</h2>
                 
+                <!-- BILDER UPLOAD -->
                 <div class="bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
                     <h3 class="font-bold text-gray-700 mb-2">Slideshow Bilder hochladen</h3>
                     <input type="file" id="imageUpload" accept="image/*" class="hidden">
@@ -179,8 +179,26 @@
                     <div id="uploadStatus" class="mt-3 font-semibold text-sm h-5"></div>
                 </div>
 
+                <!-- BILDER GALERIE -->
                 <h3 class="font-bold text-gray-700 mb-3">Aktuelle Bilder in der Slideshow:</h3>
-                <div id="imagesGallery" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                <div id="imagesGallery" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12"></div>
+                
+                <hr class="border-gray-200 mb-8">
+
+                <!-- NEU: MASSEN-IMPORT FÜR FLÜGE -->
+                <div class="bg-blue-50 p-6 rounded-xl border border-blue-200">
+                    <h3 class="font-bold text-blue-900 mb-2 text-xl">CSV Massen-Import (Flüge)</h3>
+                    <p class="text-sm text-blue-700 mb-4">Format: <code class="bg-blue-100 px-1 rounded">Datum,Wer ist geflogen,Start,Landung,Start,Landung</code><br>
+                    Beispiel: <code class="bg-blue-100 px-1 rounded">29.03.2025,Schnipper,EDQH,EDEW,11:19,11:53</code></p>
+                    
+                    <textarea id="importCsvData" rows="6" class="w-full p-3 border border-blue-300 rounded-lg outline-none focus:border-blue-500 mb-4 font-mono text-sm" placeholder="Füge hier deine 400 Zeilen ein..."></textarea>
+                    
+                    <button id="runImportBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-colors disabled:opacity-50">
+                        Daten analysieren & importieren
+                    </button>
+                    <div id="importStatus" class="mt-3 font-semibold text-sm"></div>
+                </div>
+
             </div>
         </div>
     </section>
@@ -190,12 +208,10 @@
     <!-- ========================================== -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
-        // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs, setDoc, getDoc, increment, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Konfigurationen
         const firebaseConfig = {
             apiKey: "AIzaSyA9ONDoCc-PahLWVkvECTZz1E9U8dpjgPc",
             authDomain: "flycardinal-a3635.firebaseapp.com",
@@ -211,158 +227,94 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Globale Variablen
         let currentUser = null;
-        let intendedRoute = '#home'; // Merkt sich, wohin der Nutzer nach Login wollte
+        let intendedRoute = '#home';
         let publicMapInstance = null;
         let editMapInstance = null;
 
-        // ==========================================
-        // 1. ROUTING LOGIK (SPA Controller)
-        // ==========================================
+        // --- 1. ROUTING ---
         function handleRouting() {
             let hash = window.location.hash || '#home';
-            const protectedRoutes = ['#edit', '#admin'];
-
-            // Wenn Route geschützt ist und Nutzer nicht eingeloggt -> Umleiten auf Login
-            if (protectedRoutes.includes(hash) && !currentUser) {
-                intendedRoute = hash;
-                hash = '#login';
-            }
-
-            // Alle Sektionen ausblenden
+            if (['#edit', '#admin'].includes(hash) && !currentUser) { intendedRoute = hash; hash = '#login'; }
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            const target = document.getElementById(`view-${hash.substring(1)}`);
+            (target ? target : document.getElementById('view-home')).classList.add('active');
             
-            // Zielsektion einblenden
-            const targetSection = document.getElementById(`view-${hash.substring(1)}`);
-            if (targetSection) {
-                targetSection.classList.add('active');
-            } else {
-                document.getElementById('view-home').classList.add('active'); // Fallback
-            }
-
-            // Spezifische Initialisierungen pro Seite
             if (hash === '#map') initPublicMap();
             if (hash === '#edit') initEditMap();
             if (hash === '#admin') loadGallery();
-            if (hash === '#home') initSlideshow(); // Bilder frisch laden
+            if (hash === '#home') initSlideshow();
         }
-
-        // Lauschen auf URL-Änderungen (Zurück/Vor-Button vom Browser)
         window.addEventListener('hashchange', handleRouting);
 
-        // ==========================================
-        // 2. AUTH LOGIK
-        // ==========================================
+        // --- 2. AUTH ---
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
-            const authMenu = document.getElementById('authMenu');
-            const navLoginBtn = document.getElementById('navLoginBtn');
-
             if (user) {
-                authMenu.classList.remove('hidden');
-                authMenu.classList.add('flex');
-                navLoginBtn.classList.add('hidden');
-                
-                // Wenn wir auf der Login Seite waren, leite zum gemerkten Ziel weiter
-                if(window.location.hash === '#login' || window.location.hash === '') {
-                    window.location.hash = intendedRoute !== '#login' ? intendedRoute : '#home';
-                } else {
-                    handleRouting(); // Ansicht aktualisieren
-                }
+                document.getElementById('authMenu').classList.replace('hidden', 'flex');
+                document.getElementById('navLoginBtn').classList.add('hidden');
+                if(window.location.hash === '#login' || window.location.hash === '') window.location.hash = intendedRoute !== '#login' ? intendedRoute : '#home';
+                else handleRouting();
             } else {
-                authMenu.classList.add('hidden');
-                authMenu.classList.remove('flex');
-                navLoginBtn.classList.remove('hidden');
-                handleRouting(); // Wirft Nutzer ggf. aus geschützten Routen raus
+                document.getElementById('authMenu').classList.replace('flex', 'hidden');
+                document.getElementById('navLoginBtn').classList.remove('hidden');
+                handleRouting();
             }
         });
+        document.getElementById('actionLoginBtn').addEventListener('click', () => signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(() => document.getElementById('loginErrorMsg').textContent = "Login fehlgeschlagen."));
+        document.getElementById('actionGoogleBtn').addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()).catch(() => document.getElementById('loginErrorMsg').textContent = "Google Fehler."));
+        document.getElementById('navLogoutBtn').addEventListener('click', () => { signOut(auth); window.location.hash = '#home'; });
 
-        // Login Aktionen
-        document.getElementById('actionLoginBtn').addEventListener('click', () => {
-            const e = document.getElementById('loginEmail').value;
-            const p = document.getElementById('loginPassword').value;
-            signInWithEmailAndPassword(auth, e, p).catch(() => document.getElementById('loginErrorMsg').textContent = "Login fehlgeschlagen.");
-        });
-        document.getElementById('actionGoogleBtn').addEventListener('click', () => {
-            signInWithPopup(auth, new GoogleAuthProvider()).catch(() => document.getElementById('loginErrorMsg').textContent = "Google Fehler.");
-        });
-        document.getElementById('navLogoutBtn').addEventListener('click', () => {
-            signOut(auth);
-            window.location.hash = '#home';
-        });
-
-        // ==========================================
-        // 3. STARTSEITE: SLIDESHOW
-        // ==========================================
+        // --- 3. SLIDESHOW ---
         let slideshowInterval;
         async function initSlideshow() {
             try {
                 const snap = await getDocs(collection(db, "slideshow_images"));
                 const container = document.getElementById('slideshow');
                 if (!snap.empty) {
-                    let html = '';
-                    let isFirst = true;
-                    snap.forEach((doc) => {
-                        html += `<img src="${doc.data().url}" class="slide ${isFirst ? 'active' : ''}">`;
-                        isFirst = false;
-                    });
+                    let html = '', isFirst = true;
+                    snap.forEach((doc) => { html += `<img src="${doc.data().url}" class="slide ${isFirst ? 'active' : ''}">`; isFirst = false; });
                     container.innerHTML = html + '<div class="absolute inset-0 bg-black bg-opacity-40 z-0"></div>';
                 }
-                
-                // Animation starten (alte Intervalle löschen)
                 clearInterval(slideshowInterval);
                 const slides = container.querySelectorAll('.slide');
                 if (slides.length > 1) {
                     let current = 0;
                     slideshowInterval = setInterval(() => {
-                        slides[current].classList.remove('active');
-                        current = (current + 1) % slides.length;
-                        slides[current].classList.add('active');
+                        slides[current].classList.remove('active'); current = (current + 1) % slides.length; slides[current].classList.add('active');
                     }, 5000);
                 }
-            } catch (e) { console.error("Slideshow Fehler", e); }
+            } catch (e) {}
         }
 
-        // ==========================================
-        // 4. KARTE: ÖFFENTLICHE ANSICHT (#map)
-        // ==========================================
-        let publicMarkers = [];
-        let publicLines = [];
-        let publicActiveMarker = null;
-        let mapLocCache = {};
-        
-        const pinSVG = `<svg viewBox="0 0 24 24" fill="#3b82f6" class="w-8 h-8 drop-shadow-md"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`;
-        const activeSVG = `<svg viewBox="0 0 24 24" fill="#ef4444" class="w-10 h-10 drop-shadow-lg"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`;
-        const defIcon = L.divIcon({ className: 'bg-transparent', html: pinSVG, iconSize: [32, 32], iconAnchor: [16, 32] });
-        const actIcon = L.divIcon({ className: 'bg-transparent', html: activeSVG, iconSize: [40, 40], iconAnchor: [20, 40] });
+        // --- 4. MAP HELPER ---
+        async function fetchOverpass(icao) {
+            try {
+                const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(`[out:json];(node["icao"="${icao}"];way["icao"="${icao}"];relation["icao"="${icao}"];);out center;`)}`);
+                const data = await res.json();
+                if(data.elements.length > 0) { const el = data.elements[0]; return { lat: el.lat || el.center.lat, lon: el.lon || el.center.lon, name: el.tags.name }; }
+            } catch(e) {} return null;
+        }
+
+        // --- 5. ÖFFENTLICHE KARTE ---
+        let publicMarkers = [], publicLines = [], publicActiveMarker = null, mapLocCache = {};
+        const defIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#3b82f6" class="w-8 h-8 drop-shadow-md"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [32, 32], iconAnchor: [16, 32] });
+        const actIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#ef4444" class="w-10 h-10 drop-shadow-lg"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [40, 40], iconAnchor: [20, 40] });
 
         function initPublicMap() {
             if (!publicMapInstance) {
-                publicMapInstance = L.map('publicMap', { zoomControl: false }).setView([50.0, 10.0], 5);
-                L.control.zoom({ position: 'topleft' }).addTo(publicMapInstance);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(publicMapInstance);
-                
-                // Sheet schließen bei Klick
-                publicMapInstance.on('click', () => {
-                    document.getElementById('bottomSheet').classList.add('translate-y-full');
-                    resetMapHighlights();
-                });
-
-                // Daten laden
+                publicMapInstance = L.map('publicMap', { zoomControl: false }).setView([50.0, 10.0], 5); L.control.zoom({ position: 'topleft' }).addTo(publicMapInstance); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(publicMapInstance);
+                publicMapInstance.on('click', () => { document.getElementById('bottomSheet').classList.add('translate-y-full'); resetMapHighlights(); });
                 onSnapshot(collection(db, "locations"), (snapshot) => {
-                    publicMarkers.forEach(m => publicMapInstance.removeLayer(m));
-                    publicMarkers = []; mapLocCache = {};
+                    publicMarkers.forEach(m => publicMapInstance.removeLayer(m)); publicMarkers = []; mapLocCache = {};
                     snapshot.forEach((doc) => {
                         const loc = doc.data(); mapLocCache[doc.id] = loc;
                         if (!loc.landings || loc.landings === 0) return;
                         const m = L.marker([loc.lat, loc.lon], { icon: defIcon }).addTo(publicMapInstance);
-                        m.on('click', () => openSheet(doc.id, loc.name, loc.landings, m, loc.lat, loc.lon));
-                        publicMarkers.push(m);
+                        m.on('click', () => openSheet(doc.id, loc.name, loc.landings, m, loc.lat, loc.lon)); publicMarkers.push(m);
                     });
                 });
             }
-            // Fix für unsichtbare Container
             setTimeout(() => publicMapInstance.invalidateSize(), 100);
         }
 
@@ -372,64 +324,35 @@
         }
 
         async function openSheet(icao, name, total, marker, toLat, toLon) {
-            resetMapHighlights();
-            publicActiveMarker = marker; marker.setIcon(actIcon); marker.setZIndexOffset(1000);
-            
-            document.getElementById('sheetTitle').textContent = `${icao} - ${name}`;
-            document.getElementById('sheetSubtitle').textContent = `${total} Landungen`;
-            document.getElementById('sheetContent').innerHTML = 'Lade...';
-            document.getElementById('bottomSheet').classList.remove('translate-y-full');
-
+            resetMapHighlights(); publicActiveMarker = marker; marker.setIcon(actIcon); marker.setZIndexOffset(1000);
+            document.getElementById('sheetTitle').textContent = `${icao} - ${name}`; document.getElementById('sheetSubtitle').textContent = `${total} Landungen`; document.getElementById('sheetContent').innerHTML = 'Lade...'; document.getElementById('bottomSheet').classList.remove('translate-y-full');
             try {
-                const q = query(collection(db, "flights"), where("toIcao", "==", icao));
-                const snap = await getDocs(q);
+                const snap = await getDocs(query(collection(db, "flights"), where("toIcao", "==", icao)));
                 let flights = []; let starts = new Set();
                 snap.forEach(d => { flights.push(d.data()); starts.add(d.data().fromIcao); });
                 flights.sort((a,b) => new Date(b.date) - new Date(a.date));
 
-                // Linien zeichnen
                 starts.forEach(async fromIcao => {
                     if (fromIcao === icao) return;
                     let coords = mapLocCache[fromIcao] || await fetchOverpass(fromIcao);
                     if (coords) {
-                        const mLat = (coords.lat + toLat)/2, mLng = (coords.lon + toLon)/2;
-                        const cLat = mLat - (toLon - coords.lon)*0.2, cLng = mLng + (toLat - coords.lat)*0.2;
+                        const mLat = (coords.lat + toLat)/2, mLng = (coords.lon + toLon)/2; const cLat = mLat - (toLon - coords.lon)*0.2, cLng = mLng + (toLat - coords.lat)*0.2;
                         let pts = []; for(let t=0; t<=1; t+=0.05) pts.push([(1-t)*(1-t)*coords.lat + 2*(1-t)*t*cLat + t*t*toLat, (1-t)*(1-t)*coords.lon + 2*(1-t)*t*cLng + t*t*toLon]);
                         publicLines.push(L.polyline(pts, {color: '#ef4444', weight: 3, opacity: 0.8, dashArray: '8,8'}).addTo(publicMapInstance));
                     }
                 });
 
-                // HTML bauen
                 let html = '<div class="space-y-3">';
-                flights.forEach(f => {
-                    html += `<details class="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"><summary class="p-4 cursor-pointer flex justify-between hover:bg-gray-50"><div class="font-bold">${new Date(f.date).toLocaleDateString('de-DE')} <span class="text-gray-400 font-normal ml-2">${f.fromIcao} ➔ ${f.toIcao}</span></div><div class="group-open:rotate-180 transform transition-transform">▼</div></summary><div class="p-4 bg-gray-50 text-sm border-t border-gray-100">${f.startTime ? 'Start: '+f.startTime+'<br>' : ''}${f.endTime ? 'Ldg: '+f.endTime+'<br>' : ''}${f.notes ? '<i>'+f.notes+'</i>' : ''}</div></details>`;
-                });
+                flights.forEach(f => { html += `<details class="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"><summary class="p-4 cursor-pointer flex justify-between hover:bg-gray-50"><div class="font-bold">${new Date(f.date).toLocaleDateString('de-DE')} <span class="text-gray-400 font-normal ml-2">${f.fromIcao} ➔ ${f.toIcao}</span></div><div class="group-open:rotate-180 transform transition-transform text-gray-400">▼</div></summary><div class="p-4 bg-gray-50 text-sm border-t border-gray-100 text-gray-700">${f.startTime ? 'Start: '+f.startTime+' Uhr<br>' : ''}${f.endTime ? 'Landung: '+f.endTime+' Uhr<br>' : ''}${f.notes ? '<i class="mt-2 block text-gray-500">"'+f.notes+'"</i>' : ''}</div></details>`; });
                 document.getElementById('sheetContent').innerHTML = html || 'Keine Flüge gefunden.';
             } catch(e) { document.getElementById('sheetContent').innerHTML = 'Fehler beim Laden.'; }
         }
+        document.getElementById('closeSheetBtn').addEventListener('click', () => { document.getElementById('bottomSheet').classList.add('translate-y-full'); resetMapHighlights(); });
 
-        document.getElementById('closeSheetBtn').addEventListener('click', () => {
-            document.getElementById('bottomSheet').classList.add('translate-y-full'); resetMapHighlights();
-        });
-
-        // ==========================================
-        // 5. EDITOR: FLUG EINTRAGEN (#edit)
-        // ==========================================
-        async function fetchOverpass(icao) {
-            try {
-                const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(`[out:json];(node["icao"="${icao}"];way["icao"="${icao}"];relation["icao"="${icao}"];);out center;`)}`);
-                const data = await res.json();
-                if(data.elements.length > 0) { const el = data.elements[0]; return { lat: el.lat || el.center.lat, lon: el.lon || el.center.lon, name: el.tags.name }; }
-            } catch(e) {} return null;
-        }
-
+        // --- 6. EDITOR ---
         function initEditMap() {
-            if (!editMapInstance) {
-                editMapInstance = L.map('editMap').setView([50.0, 10.0], 5);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(editMapInstance);
-            }
-            setTimeout(() => editMapInstance.invalidateSize(), 100);
-            if(!document.getElementById('date').value) document.getElementById('date').valueAsDate = new Date();
+            if (!editMapInstance) { editMapInstance = L.map('editMap').setView([50.0, 10.0], 5); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(editMapInstance); }
+            setTimeout(() => editMapInstance.invalidateSize(), 100); if(!document.getElementById('date').value) document.getElementById('date').valueAsDate = new Date();
         }
 
         let editCache = {};
@@ -437,13 +360,8 @@
             const inp = document.getElementById(id), res = document.getElementById(resId), icao = inp.value.toUpperCase().trim();
             if(icao.length !== 4) { res.innerHTML=''; inp.classList.remove('border-green-500'); return null; }
             res.innerHTML = '<span class="text-blue-500">Prüfe...</span>';
-            
             let loc = editCache[icao];
-            if(!loc) {
-                try { const docSnap = await getDoc(doc(db, "locations", icao)); if(docSnap.exists()) loc = docSnap.data(); } catch(e){}
-                if(!loc) loc = await fetchOverpass(icao);
-                if(loc) editCache[icao] = loc;
-            }
+            if(!loc) { try { const docSnap = await getDoc(doc(db, "locations", icao)); if(docSnap.exists()) loc = docSnap.data(); } catch(e){} if(!loc) loc = await fetchOverpass(icao); if(loc) editCache[icao] = loc; }
             if(loc) { res.innerHTML = `<span class="text-green-600 font-bold">✓</span> ${loc.name||'Gefunden'}`; inp.classList.add('border-green-500'); if(id==='toIcao' && editMapInstance) editMapInstance.setView([loc.lat, loc.lon], 8); return loc; }
             else { res.innerHTML = '<span class="text-red-500">Nicht gefunden</span>'; inp.classList.remove('border-green-500'); return null; }
         }
@@ -453,48 +371,31 @@
         document.getElementById('saveFlightBtn').addEventListener('click', async () => {
             const f = document.getElementById('fromIcao').value.toUpperCase().trim(), t = document.getElementById('toIcao').value.toUpperCase().trim(), d = document.getElementById('date').value, stat = document.getElementById('saveFlightStatus'), btn = document.getElementById('saveFlightBtn');
             if(!f || !t || !d) { stat.textContent="Bitte Start, Ziel, Datum füllen"; stat.className="text-red-500 mt-2 text-center text-sm font-semibold"; return; }
-            
             btn.disabled = true; stat.textContent="Speichere..."; stat.className="text-blue-500 mt-2 text-center text-sm font-semibold animate-pulse";
             try {
-                let fLoc = editCache[f] || await validateField('fromIcao', 'fromResult');
-                let tLoc = editCache[t] || await validateField('toIcao', 'toResult');
+                let fLoc = editCache[f] || await validateField('fromIcao', 'fromResult'), tLoc = editCache[t] || await validateField('toIcao', 'toResult');
                 if(!fLoc || !tLoc) throw new Error("Flughafen ungültig");
-
                 await setDoc(doc(db, "locations", f), { name: fLoc.name||f, lat: fLoc.lat, lon: fLoc.lon, departures: increment(1) }, { merge: true });
                 await setDoc(doc(db, "locations", t), { name: tLoc.name||t, lat: tLoc.lat, lon: tLoc.lon, landings: increment(1) }, { merge: true });
                 await addDoc(collection(db, "flights"), { fromIcao: f, toIcao: t, date: d, startTime: document.getElementById('startTime').value, endTime: document.getElementById('endTime').value, notes: document.getElementById('notes').value, timestamp: new Date() });
-
                 stat.textContent="Erfolgreich!"; stat.className="text-green-500 mt-2 text-center text-sm font-semibold";
-                ['fromIcao','toIcao','startTime','endTime','notes'].forEach(id => document.getElementById(id).value='');
-                ['fromResult','toResult'].forEach(id => document.getElementById(id).innerHTML='');
-                document.getElementById('fromIcao').classList.remove('border-green-500'); document.getElementById('toIcao').classList.remove('border-green-500');
-            } catch(e) { stat.textContent="Fehler!"; stat.className="text-red-500 mt-2 text-center text-sm font-semibold"; }
-            finally { btn.disabled = false; setTimeout(() => {if(stat.textContent==="Erfolgreich!")stat.textContent=""},3000); }
+                ['fromIcao','toIcao','startTime','endTime','notes'].forEach(id => document.getElementById(id).value=''); ['fromResult','toResult'].forEach(id => document.getElementById(id).innerHTML=''); document.getElementById('fromIcao').classList.remove('border-green-500'); document.getElementById('toIcao').classList.remove('border-green-500');
+            } catch(e) { stat.textContent="Fehler!"; stat.className="text-red-500 mt-2 text-center text-sm font-semibold"; } finally { btn.disabled = false; setTimeout(() => {if(stat.textContent==="Erfolgreich!")stat.textContent=""},3000); }
         });
 
-        // ==========================================
-        // 6. ADMIN: CLOUDINARY UPLOAD (#admin)
-        // ==========================================
+        // --- 7. ADMIN: UPLOAD & CSV IMPORT ---
         let adminFile = null;
-        document.getElementById('imageUpload').addEventListener('change', (e) => {
-            if(e.target.files.length > 0) { adminFile = e.target.files[0]; document.getElementById('fileName').textContent = adminFile.name; document.getElementById('uploadCloudinaryBtn').disabled = false; }
-        });
-
+        document.getElementById('imageUpload').addEventListener('change', (e) => { if(e.target.files.length > 0) { adminFile = e.target.files[0]; document.getElementById('fileName').textContent = adminFile.name; document.getElementById('uploadCloudinaryBtn').disabled = false; }});
         document.getElementById('uploadCloudinaryBtn').addEventListener('click', async () => {
-            if(!adminFile) return;
-            const btn = document.getElementById('uploadCloudinaryBtn'), stat = document.getElementById('uploadStatus');
+            if(!adminFile) return; const btn = document.getElementById('uploadCloudinaryBtn'), stat = document.getElementById('uploadStatus');
             btn.disabled=true; stat.textContent="Lädt hoch..."; stat.className="text-blue-500 mt-3 text-center text-sm font-semibold animate-pulse";
             try {
                 const fd = new FormData(); fd.append("file", adminFile); fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-                if(!res.ok) throw new Error("Upload Failed");
-                const data = await res.json();
+                if(!res.ok) throw new Error("Upload Failed"); const data = await res.json();
                 await addDoc(collection(db, "slideshow_images"), { url: data.secure_url, cloudinaryId: data.public_id, uploadedAt: new Date() });
-                
-                stat.textContent="Erfolgreich!"; stat.className="text-green-500 mt-3 text-center text-sm font-semibold";
-                adminFile=null; document.getElementById('imageUpload').value=''; document.getElementById('fileName').textContent="Kein Bild ausgewählt";
-            } catch(e) { stat.textContent="Upload Fehler!"; stat.className="text-red-500 mt-3 text-center text-sm font-semibold"; }
-            finally { setTimeout(() => {if(stat.textContent==="Erfolgreich!")stat.textContent=""},3000); }
+                stat.textContent="Erfolgreich!"; stat.className="text-green-500 mt-3 text-center text-sm font-semibold"; adminFile=null; document.getElementById('imageUpload').value=''; document.getElementById('fileName').textContent="Kein Bild ausgewählt";
+            } catch(e) { stat.textContent="Upload Fehler!"; stat.className="text-red-500 mt-3 text-center text-sm font-semibold"; } finally { setTimeout(() => {if(stat.textContent==="Erfolgreich!")stat.textContent=""},3000); }
         });
 
         function loadGallery() {
@@ -509,10 +410,94 @@
                 });
             });
         }
-        window.deleteImg = async (id) => { if(confirm("Bild von der Startseite entfernen?")) { try { await deleteDoc(doc(db, "slideshow_images", id)); } catch(e){ alert("Fehler"); } } };
+        window.deleteImg = async (id) => { if(confirm("Bild von der Startseite entfernen?")) { try { await deleteDoc(doc(db, "slideshow_images", id)); } catch(e){} } };
+
+        // CSV IMPORT LOGIK
+        document.getElementById('runImportBtn').addEventListener('click', async () => {
+            const csvText = document.getElementById('importCsvData').value;
+            const stat = document.getElementById('importStatus');
+            const btn = document.getElementById('runImportBtn');
+            if(!csvText) return;
+
+            btn.disabled = true;
+            stat.textContent = "Analysiere CSV Daten...";
+            stat.className = "text-blue-500 mt-3 font-semibold text-sm animate-pulse";
+
+            try {
+                const lines = csvText.split('\n').map(l => l.trim()).filter(l => l);
+                const flights = []; const icaos = new Set();
+
+                lines.forEach(line => {
+                    const parts = line.split(',');
+                    if(parts.length >= 6) {
+                        const [dateStr, pilot, fromIcao, toIcao, startTime, endTime] = parts;
+                        const dParts = dateStr.split('.');
+                        if(dParts.length === 3) {
+                            flights.push({
+                                date: `${dParts[2]}-${dParts[1]}-${dParts[0]}`, // Format: YYYY-MM-DD
+                                pilot: pilot, // Unsichtbar in der UI
+                                fromIcao: fromIcao.toUpperCase(),
+                                toIcao: toIcao.toUpperCase(),
+                                startTime: startTime,
+                                endTime: endTime,
+                                notes: "", // Bleibt leer
+                                timestamp: new Date()
+                            });
+                            icaos.add(fromIcao.toUpperCase());
+                            icaos.add(toIcao.toUpperCase());
+                        }
+                    }
+                });
+
+                if(flights.length === 0) throw new Error("Keine gültigen Zeilen gefunden.");
+
+                stat.textContent = `${flights.length} Flüge und ${icaos.size} Flughäfen gefunden. Prüfe Koordinaten...`;
+
+                // 1. Alle ICAO Koordinaten besorgen (Firebase oder API)
+                const resolvedLocations = {};
+                for(let icao of icaos) {
+                    const docSnap = await getDoc(doc(db, "locations", icao));
+                    if(docSnap.exists()) {
+                        resolvedLocations[icao] = docSnap.data();
+                    } else {
+                        stat.textContent = `Suche Koordinaten für neuen Flughafen: ${icao}...`;
+                        const opLoc = await fetchOverpass(icao);
+                        if(opLoc) {
+                            resolvedLocations[icao] = opLoc;
+                            await setDoc(doc(db, "locations", icao), { name: opLoc.name || icao, lat: opLoc.lat, lon: opLoc.lon, departures: 0, landings: 0 });
+                        }
+                        // 1 Sekunde Pause, damit OpenStreetMap uns nicht wegen Spam blockiert
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                }
+
+                // 2. Flüge hochladen
+                stat.textContent = `Importiere ${flights.length} Flüge in die Datenbank...`;
+                let count = 0;
+                for(let f of flights) {
+                    if(!resolvedLocations[f.fromIcao] || !resolvedLocations[f.toIcao]) continue; // Überspringe Fehlerhafte
+                    await addDoc(collection(db, "flights"), f);
+                    await setDoc(doc(db, "locations", f.fromIcao), { departures: increment(1) }, { merge: true });
+                    await setDoc(doc(db, "locations", f.toIcao), { landings: increment(1) }, { merge: true });
+                    count++;
+                    if(count % 10 === 0) stat.textContent = `Importiere... ${count} / ${flights.length} abgeschlossen`;
+                }
+
+                stat.textContent = `Erfolgreich! ${count} Flüge wurden importiert.`;
+                stat.className = "text-green-500 mt-3 font-semibold text-sm";
+                document.getElementById('importCsvData').value = '';
+
+            } catch (e) {
+                console.error(e);
+                stat.textContent = "Fehler: Überprüfe das CSV Format.";
+                stat.className = "text-red-500 mt-3 font-semibold text-sm";
+            } finally {
+                btn.disabled = false;
+            }
+        });
 
         // INITIALSTART
-        handleRouting(); // Setzt beim Neuladen die richtige Ansicht
+        handleRouting();
     </script>
 </body>
 </html>
