@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AeroClub Cardinal</title>
+    <title>fly-cardinal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet CSS -->
@@ -40,17 +40,15 @@
                 <!-- Logo -->
                 <div class="flex items-center">
                     <a href="#home" class="flex-shrink-0 flex items-center gap-2">
-                        <svg class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                        <span class="font-bold text-xl text-gray-900">AeroClub Cardinal</span>
+                        <img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773184165/Cardinal_Bird_sntrqv.png" alt="fly-cardinal Logo" class="h-10 w-auto">
+                        <span class="font-bold text-xl text-gray-900">fly-cardinal</span>
                     </a>
                 </div>
                 
                 <!-- Desktop Menü -->
                 <div class="hidden md:flex md:items-center md:space-x-8">
                     <a href="#home" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="home">Start</a>
-                    <a href="#map" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="map">Flug-Tagebuch</a>
+                    <a href="#map" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="map">Flugkarte</a>
                     <a href="#home" class="text-gray-600 hover:text-blue-600 font-medium transition-colors" onclick="alert('Crew Seite folgt noch!')">Crew</a>
                     
                     <!-- Admin Links (Nur sichtbar wenn eingeloggt) -->
@@ -79,10 +77,13 @@
                 <div class="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
             </div>
             <div class="relative z-10 text-center px-4">
-                <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-lg">Willkommen bei AeroClub</h1>
-                <p class="text-lg md:text-2xl text-gray-200 max-w-3xl mx-auto drop-shadow-md">Dein Flugverein für unvergessliche Momente über den Wolken.</p>
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-lg">Willkommen bei fly-cardinal</h1>
+                <p class="text-lg md:text-2xl text-gray-200 max-w-3xl mx-auto drop-shadow-md">Hier irgendeinen Text einfügen.</p>
                 <div class="mt-8 flex justify-center gap-4">
-                    <a href="#map" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105">Live Karte ansehen</a>
+                    <a href="#map" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Interaktive Karte
+                    </a>
                 </div>
             </div>
         </header>
@@ -94,12 +95,12 @@
                 <p class="text-lg text-gray-600 leading-relaxed">Sicherheit, Gemeinschaft und die Freude am Fliegen stehen bei uns an erster Stelle. Egal ob Routinier oder Flugschüler, komm an Bord!</p>
             </section>
             <section class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
-                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img src="https://images.unsplash.com/photo-1517976487492-5750f3195933?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Flug-Tagebuch</h3><p class="text-gray-600 mb-4">Verfolge unsere letzten Flüge interaktiv.</p><a href="#map" class="text-blue-600 font-semibold">Zur Karte &rarr;</a></div></div>
+                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img src="https://images.unsplash.com/photo-1517976487492-5750f3195933?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Flugkarte</h3><p class="text-gray-600 mb-4">Verfolge unsere letzten Flüge interaktiv.</p><a href="#map" class="text-blue-600 font-semibold">Zur Karte &rarr;</a></div></div>
                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Unsere Crew</h3><p class="text-gray-600 mb-4">Lerne unsere Piloten kennen.</p><a href="#" class="text-blue-600 font-semibold">Team ansehen &rarr;</a></div></div>
                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img src="https://images.unsplash.com/photo-1582236894056-b81d7fce90ad?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Die Flotte</h3><p class="text-gray-600 mb-4">Entdecke unsere top gewarteten Flugzeuge.</p><a href="#" class="text-blue-600 font-semibold">Flotte entdecken &rarr;</a></div></div>
             </section>
         </main>
-        <footer class="bg-gray-900 text-gray-400 py-12 mt-auto"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2024 AeroClub Cardinal. Alle Rechte vorbehalten.</p></div></footer>
+        <footer class="bg-gray-900 text-gray-400 py-12 mt-auto"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
     </section>
 
     <!-- ========================================== -->
@@ -173,7 +174,7 @@
     <section id="view-admin" class="view-section p-4 bg-gray-100">
         <div class="max-w-5xl mx-auto w-full">
             <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-4">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">AeroClub Admin Dashboard</h2>
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">fly-cardinal Admin Dashboard</h2>
                 
                 <!-- BILDER UPLOAD -->
                 <div class="bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
