@@ -34,7 +34,7 @@
 <body class="flex flex-col min-h-screen">
 
     <!-- GEMEINSAME NAVIGATION -->
-    <nav class="bg-white shadow-md sticky top-0 z-[10000]">
+    <nav class="bg-white shadow-md sticky top-0 z-[10000] relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <!-- Logo -->
@@ -45,14 +45,14 @@
                     </a>
                 </div>
                 
-                <!-- Desktop Menü -->
+                <!-- Desktop Menü (Versteckt auf Handys) -->
                 <div class="hidden md:flex md:items-center md:space-x-8">
                     <a href="#home" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="home">Start</a>
                     <a href="#map" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="map">Flugkarte</a>
                     <a href="#home" class="text-gray-600 hover:text-blue-600 font-medium transition-colors" onclick="alert('Crew Seite folgt noch!')">Crew</a>
                     
                     <!-- Admin Links (Nur sichtbar wenn eingeloggt) -->
-                    <div id="authMenu" class="hidden flex items-center space-x-4 border-l pl-4 border-gray-200">
+                    <div id="authMenu" class="hidden items-center space-x-4 border-l pl-4 border-gray-200">
                         <a href="#edit" class="nav-link text-green-600 hover:text-green-700 font-bold text-sm" data-target="edit">+ Flug eintragen</a>
                         <a href="#admin" class="nav-link text-purple-600 hover:text-purple-700 font-bold text-sm" data-target="admin">Admin</a>
                         <button id="navLogoutBtn" class="text-gray-500 hover:text-red-600 font-medium text-sm">Abmelden</button>
@@ -61,7 +61,33 @@
                     <!-- Login Button (Sichtbar wenn ausgeloggt) -->
                     <a href="#login" id="navLoginBtn" class="nav-link bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-md transition-colors text-sm" data-target="login">Mitglied Login</a>
                 </div>
+
+                <!-- Mobile Burger Button -->
+                <div class="flex items-center md:hidden">
+                    <button id="mobileMenuBtn" class="text-gray-500 hover:text-gray-800 focus:outline-none p-2">
+                        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
+        </div>
+
+        <!-- Mobile Menü Container (Drop-Down) -->
+        <div id="mobileMenu" class="hidden flex-col md:hidden bg-white absolute w-full left-0 top-16 shadow-xl border-t border-gray-100 z-[9999]">
+            <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Start</a>
+            <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Flugkarte</a>
+            <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50" onclick="alert('Crew Seite folgt noch!')">Crew</a>
+            
+            <!-- Admin Links Mobile (Nur sichtbar wenn eingeloggt) -->
+            <div id="mobileAuthMenu" class="hidden flex-col bg-gray-50">
+                <a href="#edit" class="px-6 py-4 text-green-600 font-bold border-b border-gray-100">+ Flug eintragen</a>
+                <a href="#admin" class="px-6 py-4 text-purple-600 font-bold border-b border-gray-100">Admin Dashboard</a>
+                <button id="mobileNavLogoutBtn" class="text-left px-6 py-4 text-red-600 font-bold hover:bg-gray-100">Abmelden</button>
+            </div>
+
+            <!-- Login Button Mobile (Sichtbar wenn ausgeloggt) -->
+            <a href="#login" id="mobileNavLoginBtn" class="px-6 py-4 text-blue-600 font-bold bg-blue-50 hover:bg-blue-100">Mitglied Login</a>
         </div>
     </nav>
 
@@ -76,11 +102,11 @@
                 <img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg" class="slide active">
                 <div class="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
             </div>
-            <div class="relative z-10 text-center px-4">
+            <div class="relative z-10 text-center px-4 w-full">
                 <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-lg">Willkommen bei fly-cardinal</h1>
                 <p class="text-lg md:text-2xl text-gray-200 max-w-3xl mx-auto drop-shadow-md">Hier irgendeinen Text einfügen.</p>
-                <div class="mt-8 flex justify-center gap-4">
-                    <a href="#map" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center gap-2">
+                <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <a href="#map" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         Interaktive Karte
                     </a>
@@ -110,14 +136,14 @@
         <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
         
         <div id="bottomSheet" class="absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[10] max-h-[85vh] flex flex-col">
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white rounded-t-3xl">
-                <div><h2 id="sheetTitle" class="text-xl font-bold text-gray-800">Flughafen</h2><p id="sheetSubtitle" class="text-sm text-gray-500">Lade...</p></div>
-                <div class="flex items-center gap-3">
-                    <select id="sortSelect" class="bg-gray-100 text-gray-700 border-none rounded-lg px-3 py-2 text-sm outline-none cursor-pointer hidden">
-                        <option value="date">Datum</option>
-                        <option value="frequency">Häufigkeit</option>
+            <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center sticky top-0 bg-white rounded-t-3xl gap-2">
+                <div><h2 id="sheetTitle" class="text-lg sm:text-xl font-bold text-gray-800">Flughafen</h2><p id="sheetSubtitle" class="text-xs sm:text-sm text-gray-500">Lade...</p></div>
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <select id="sortSelect" class="bg-gray-100 text-gray-700 border-none rounded-lg px-2 py-2 text-xs sm:text-sm outline-none cursor-pointer hidden">
+                        <option value="date">Nach Datum</option>
+                        <option value="frequency">Nach Häufigkeit</option>
                     </select>
-                    <button id="closeSheetBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-10 h-10 flex items-center justify-center">✕</button>
+                    <button id="closeSheetBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">✕</button>
                 </div>
             </div>
             <div id="sheetContent" class="p-4 overflow-y-auto flex-grow bg-gray-50 h-[300px]"></div>
@@ -127,7 +153,7 @@
     <!-- ========================================== -->
     <!-- VIEW: LOGIN (#login)                       -->
     <!-- ========================================== -->
-    <section id="view-login" class="view-section items-center justify-center bg-gray-100">
+    <section id="view-login" class="view-section items-center justify-center bg-gray-100 px-4">
         <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center">
             <h3 class="text-2xl font-bold mb-6 text-gray-800">Mitglieds-Login</h3>
             <input type="email" id="loginEmail" placeholder="E-Mail" class="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required>
@@ -143,8 +169,8 @@
     <!-- ========================================== -->
     <!-- VIEW: FLUG EINTRAGEN (#edit)               -->
     <!-- ========================================== -->
-    <section id="view-edit" class="view-section p-4 md:flex-row gap-4 bg-gray-100">
-        <div class="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-xl overflow-y-auto flex flex-col h-full max-h-[calc(100vh-100px)]">
+    <section id="view-edit" class="view-section p-4 flex flex-col md:flex-row gap-4 bg-gray-100 overflow-y-auto">
+        <div class="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-md flex flex-col">
             <h3 class="text-xl font-bold text-gray-800 mb-6">Neuen Flug eintragen</h3>
             <div class="space-y-4 flex-grow">
                 <div><label class="label">Start (ICAO)</label><input type="text" id="fromIcao" class="input-field uppercase" maxlength="4" required><div id="fromResult" class="text-xs mt-1 h-4"></div></div>
@@ -163,7 +189,7 @@
                 <div id="saveFlightStatus" class="text-center text-sm font-semibold h-5 mt-2"></div>
             </div>
         </div>
-        <div class="flex-grow rounded-2xl overflow-hidden shadow-xl border border-gray-200 min-h-[400px] relative">
+        <div class="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[400px] relative">
             <div id="editMap" class="w-full h-full absolute inset-0 z-0"></div>
         </div>
     </section>
@@ -171,36 +197,35 @@
     <!-- ========================================== -->
     <!-- VIEW: ADMIN DASHBOARD (#admin)             -->
     <!-- ========================================== -->
-    <section id="view-admin" class="view-section p-4 bg-gray-100">
+    <section id="view-admin" class="view-section p-4 bg-gray-100 overflow-y-auto">
         <div class="max-w-5xl mx-auto w-full">
-            <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-4">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">fly-cardinal Admin Dashboard</h2>
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-2 sm:mt-4">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">fly-cardinal Admin Dashboard</h2>
                 
                 <!-- BILDER UPLOAD -->
-                <div class="bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
+                <div class="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
                     <h3 class="font-bold text-gray-700 mb-2">Slideshow Bilder hochladen</h3>
                     <input type="file" id="imageUpload" accept="image/*" class="hidden">
                     <label for="imageUpload" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow inline-block mb-3">Bild auswählen</label>
-                    <p id="fileName" class="text-sm text-gray-500 mb-4">Kein Bild ausgewählt</p>
-                    <button id="uploadCloudinaryBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow disabled:opacity-50" disabled>Hochladen</button>
+                    <p id="fileName" class="text-sm text-gray-500 mb-4 truncate w-full">Kein Bild ausgewählt</p>
+                    <button id="uploadCloudinaryBtn" class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow disabled:opacity-50" disabled>Hochladen</button>
                     <div id="uploadStatus" class="mt-3 font-semibold text-sm h-5"></div>
                 </div>
 
                 <!-- BILDER GALERIE -->
                 <h3 class="font-bold text-gray-700 mb-3">Aktuelle Bilder in der Slideshow:</h3>
-                <div id="imagesGallery" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12"></div>
+                <div id="imagesGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-12"></div>
                 
                 <hr class="border-gray-200 mb-8">
 
-                <!-- NEU: MASSEN-IMPORT FÜR FLÜGE -->
-                <div class="bg-blue-50 p-6 rounded-xl border border-blue-200">
-                    <h3 class="font-bold text-blue-900 mb-2 text-xl">CSV Massen-Import (Flüge)</h3>
-                    <p class="text-sm text-blue-700 mb-4">Format: <code class="bg-blue-100 px-1 rounded">Datum,Wer ist geflogen,Start,Landung,Start,Landung</code><br>
-                    Beispiel: <code class="bg-blue-100 px-1 rounded">29.03.2025,Schnipper,EDQH,EDEW,11:19,11:53</code></p>
+                <!-- MASSEN-IMPORT FÜR FLÜGE -->
+                <div class="bg-blue-50 p-4 sm:p-6 rounded-xl border border-blue-200">
+                    <h3 class="font-bold text-blue-900 mb-2 text-lg sm:text-xl">CSV Massen-Import (Flüge)</h3>
+                    <p class="text-xs sm:text-sm text-blue-700 mb-4">Format: <code class="bg-blue-100 px-1 rounded break-all">Datum,Wer ist geflogen,Start,Landung,Start,Landung</code></p>
                     
-                    <textarea id="importCsvData" rows="6" class="w-full p-3 border border-blue-300 rounded-lg outline-none focus:border-blue-500 mb-4 font-mono text-sm" placeholder="Füge hier deine 400 Zeilen ein..."></textarea>
+                    <textarea id="importCsvData" rows="6" class="w-full p-3 border border-blue-300 rounded-lg outline-none focus:border-blue-500 mb-4 font-mono text-xs sm:text-sm" placeholder="Füge hier deine Zeilen ein..."></textarea>
                     
-                    <button id="runImportBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-colors disabled:opacity-50">
+                    <button id="runImportBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-colors disabled:opacity-50">
                         Daten analysieren & importieren
                     </button>
                     <div id="importStatus" class="mt-3 font-semibold text-sm"></div>
@@ -239,10 +264,31 @@
         let publicMapInstance = null;
         let editMapInstance = null;
 
+        // --- MOBILE MENU LOGIK ---
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenu.classList.toggle('flex');
+        });
+
+        // Versteckt das Menü, wenn ein Link angeklickt wird
+        document.querySelectorAll('#mobileMenu a, #mobileMenu button').forEach(el => {
+            el.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                mobileMenu.classList.remove('flex');
+            });
+        });
+
         // --- 1. ROUTING ---
         function handleRouting() {
             let hash = window.location.hash || '#home';
             if (['#edit', '#admin'].includes(hash) && !currentUser) { intendedRoute = hash; hash = '#login'; }
+            
+            // Schließe Mobile Menu bei Routenwechsel
+            mobileMenu.classList.add('hidden');
+            mobileMenu.classList.remove('flex');
+
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             const target = document.getElementById(`view-${hash.substring(1)}`);
             (target ? target : document.getElementById('view-home')).classList.add('active');
@@ -258,19 +304,33 @@
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
+                // Desktop
                 document.getElementById('authMenu').classList.replace('hidden', 'flex');
                 document.getElementById('navLoginBtn').classList.add('hidden');
+                // Mobile
+                document.getElementById('mobileAuthMenu').classList.replace('hidden', 'flex');
+                document.getElementById('mobileNavLoginBtn').classList.add('hidden');
+
                 if(window.location.hash === '#login' || window.location.hash === '') window.location.hash = intendedRoute !== '#login' ? intendedRoute : '#home';
                 else handleRouting();
             } else {
+                // Desktop
                 document.getElementById('authMenu').classList.replace('flex', 'hidden');
                 document.getElementById('navLoginBtn').classList.remove('hidden');
+                // Mobile
+                document.getElementById('mobileAuthMenu').classList.replace('flex', 'hidden');
+                document.getElementById('mobileNavLoginBtn').classList.remove('hidden');
+                
                 handleRouting();
             }
         });
         document.getElementById('actionLoginBtn').addEventListener('click', () => signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(() => document.getElementById('loginErrorMsg').textContent = "Login fehlgeschlagen."));
         document.getElementById('actionGoogleBtn').addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()).catch(() => document.getElementById('loginErrorMsg').textContent = "Google Fehler."));
-        document.getElementById('navLogoutBtn').addEventListener('click', () => { signOut(auth); window.location.hash = '#home'; });
+        
+        // Logout Buttons (Desktop & Mobile)
+        const logoutAction = () => { signOut(auth); window.location.hash = '#home'; };
+        document.getElementById('navLogoutBtn').addEventListener('click', logoutAction);
+        document.getElementById('mobileNavLogoutBtn').addEventListener('click', logoutAction);
 
         // --- 3. SLIDESHOW ---
         let slideshowInterval;
@@ -305,7 +365,7 @@
 
         // --- 5. ÖFFENTLICHE KARTE ---
         let publicMarkers = [], publicLines = [], publicActiveMarker = null, mapLocCache = {};
-        let currentSheetFlights = []; // NEU: Speichert Flüge für die Sortierung im Dropdown
+        let currentSheetFlights = [];
         const defIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#3b82f6" class="w-8 h-8 drop-shadow-md"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [32, 32], iconAnchor: [16, 32] });
         const actIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#ef4444" class="w-10 h-10 drop-shadow-lg"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [40, 40], iconAnchor: [20, 40] });
 
@@ -323,7 +383,7 @@
                     });
                 });
             }
-            setTimeout(() => publicMapInstance.invalidateSize(), 100);
+            setTimeout(() => publicMapInstance.invalidateSize(), 300);
         }
 
         function resetMapHighlights() {
@@ -344,9 +404,7 @@
                 snap.forEach(d => { flights.push(d.data()); starts.add(d.data().fromIcao); });
                 currentSheetFlights = flights;
 
-                if (currentSheetFlights.length > 0) {
-                    document.getElementById('sortSelect').classList.remove('hidden');
-                }
+                if (currentSheetFlights.length > 0) document.getElementById('sortSelect').classList.remove('hidden');
 
                 starts.forEach(async fromIcao => {
                     if (fromIcao === icao) return;
@@ -357,54 +415,25 @@
                         publicLines.push(L.polyline(pts, {color: '#ef4444', weight: 3, opacity: 0.8, dashArray: '8,8'}).addTo(publicMapInstance));
                     }
                 });
-
                 renderSheetContent();
             } catch(e) { document.getElementById('sheetContent').innerHTML = 'Fehler beim Laden.'; }
         }
 
         function renderSheetContent() {
-            const sortBy = document.getElementById('sortSelect').value;
-            const contentDiv = document.getElementById('sheetContent');
-            let html = '';
+            const sortBy = document.getElementById('sortSelect').value; const contentDiv = document.getElementById('sheetContent'); let html = '';
+            const formatDate = (dStr) => { const d = new Date(dStr); return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getFullYear()).slice(-2)}`; };
+            const flightHtml = (f) => `<details class="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-3"><summary class="p-4 cursor-pointer flex justify-between hover:bg-gray-50"><div class="font-bold text-sm sm:text-base">${formatDate(f.date)} <span class="text-gray-400 font-normal ml-2">${f.fromIcao} ➔ ${f.toIcao}</span></div><div class="group-open:rotate-180 transform transition-transform text-gray-400">▼</div></summary><div class="p-4 bg-gray-50 text-xs sm:text-sm border-t border-gray-100 text-gray-700">${f.startTime ? 'Start: '+f.startTime+' Uhr<br>' : ''}${f.endTime ? 'Landung: '+f.endTime+' Uhr<br>' : ''}${f.notes ? '<i class="mt-2 block text-gray-500">"'+f.notes+'"</i>' : ''}</div></details>`;
 
-            const formatDate = (dStr) => {
-                const d = new Date(dStr);
-                return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getFullYear()).slice(-2)}`;
-            };
-
-            const flightHtml = (f) => `<details class="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-3"><summary class="p-4 cursor-pointer flex justify-between hover:bg-gray-50"><div class="font-bold">${formatDate(f.date)} <span class="text-gray-400 font-normal ml-2">${f.fromIcao} ➔ ${f.toIcao}</span></div><div class="group-open:rotate-180 transform transition-transform text-gray-400">▼</div></summary><div class="p-4 bg-gray-50 text-sm border-t border-gray-100 text-gray-700">${f.startTime ? 'Start: '+f.startTime+' Uhr<br>' : ''}${f.endTime ? 'Landung: '+f.endTime+' Uhr<br>' : ''}${f.notes ? '<i class="mt-2 block text-gray-500">"'+f.notes+'"</i>' : ''}</div></details>`;
-
-            if (currentSheetFlights.length === 0) {
-                contentDiv.innerHTML = 'Keine Flüge gefunden.';
-                return;
-            }
-
+            if (currentSheetFlights.length === 0) { contentDiv.innerHTML = 'Keine Flüge gefunden.'; return; }
             if (sortBy === 'date') {
                 currentSheetFlights.sort((a,b) => new Date(b.date) - new Date(a.date));
-                html += '<div class="space-y-3">';
-                currentSheetFlights.forEach(f => { html += flightHtml(f); });
-                html += '</div>';
+                html += '<div class="space-y-3">'; currentSheetFlights.forEach(f => { html += flightHtml(f); }); html += '</div>';
             } else if (sortBy === 'frequency') {
-                const groups = {};
-                currentSheetFlights.forEach(f => {
-                    if (!groups[f.fromIcao]) groups[f.fromIcao] = [];
-                    groups[f.fromIcao].push(f);
-                });
-                
-                const sortedGroups = Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
-                
-                sortedGroups.forEach(([fromIcao, flightsInGroup]) => {
+                const groups = {}; currentSheetFlights.forEach(f => { if (!groups[f.fromIcao]) groups[f.fromIcao] = []; groups[f.fromIcao].push(f); });
+                Object.entries(groups).sort((a, b) => b[1].length - a[1].length).forEach(([fromIcao, flightsInGroup]) => {
                     flightsInGroup.sort((a,b) => new Date(b.date) - new Date(a.date));
-                    html += `
-                    <div class="mb-6">
-                        <div class="flex items-center gap-2 mb-3 px-2">
-                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">Von ${fromIcao}</span>
-                            <span class="text-gray-500 text-sm">${flightsInGroup.length} Flug${flightsInGroup.length !== 1 ? 'e' : ''}</span>
-                        </div>
-                        <div class="space-y-0 pl-2 border-l-2 border-blue-200">
-                    `;
-                    flightsInGroup.forEach(f => { html += flightHtml(f); });
-                    html += `</div></div>`;
+                    html += `<div class="mb-6"><div class="flex items-center gap-2 mb-3 px-2"><span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">Von ${fromIcao}</span><span class="text-gray-500 text-xs sm:text-sm">${flightsInGroup.length} Flug${flightsInGroup.length !== 1 ? 'e' : ''}</span></div><div class="space-y-0 pl-2 border-l-2 border-blue-200">`;
+                    flightsInGroup.forEach(f => { html += flightHtml(f); }); html += `</div></div>`;
                 });
             }
             contentDiv.innerHTML = html;
@@ -416,7 +445,7 @@
         // --- 6. EDITOR ---
         function initEditMap() {
             if (!editMapInstance) { editMapInstance = L.map('editMap').setView([50.0, 10.0], 5); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(editMapInstance); }
-            setTimeout(() => editMapInstance.invalidateSize(), 100); if(!document.getElementById('date').value) document.getElementById('date').valueAsDate = new Date();
+            setTimeout(() => editMapInstance.invalidateSize(), 300); if(!document.getElementById('date').value) document.getElementById('date').valueAsDate = new Date();
         }
 
         let editCache = {};
@@ -476,7 +505,6 @@
         }
         window.deleteImg = async (id) => { if(confirm("Bild von der Startseite entfernen?")) { try { await deleteDoc(doc(db, "slideshow_images", id)); } catch(e){} } };
 
-        // CSV IMPORT LOGIK
         document.getElementById('runImportBtn').addEventListener('click', async () => {
             const csvText = document.getElementById('importCsvData').value;
             const stat = document.getElementById('importStatus');
@@ -499,12 +527,12 @@
                         if(dParts.length === 3) {
                             flights.push({
                                 date: `${dParts[2]}-${dParts[1]}-${dParts[0]}`, // Format: YYYY-MM-DD
-                                pilot: pilot, // Unsichtbar in der UI
+                                pilot: pilot,
                                 fromIcao: fromIcao.toUpperCase(),
                                 toIcao: toIcao.toUpperCase(),
                                 startTime: startTime,
                                 endTime: endTime,
-                                notes: "", // Bleibt leer
+                                notes: "",
                                 timestamp: new Date()
                             });
                             icaos.add(fromIcao.toUpperCase());
@@ -514,10 +542,8 @@
                 });
 
                 if(flights.length === 0) throw new Error("Keine gültigen Zeilen gefunden.");
-
                 stat.textContent = `${flights.length} Flüge und ${icaos.size} Flughäfen gefunden. Prüfe Koordinaten...`;
 
-                // 1. Alle ICAO Koordinaten besorgen (Firebase oder API)
                 const resolvedLocations = {};
                 for(let icao of icaos) {
                     const docSnap = await getDoc(doc(db, "locations", icao));
@@ -530,16 +556,14 @@
                             resolvedLocations[icao] = opLoc;
                             await setDoc(doc(db, "locations", icao), { name: opLoc.name || icao, lat: opLoc.lat, lon: opLoc.lon, departures: 0, landings: 0 });
                         }
-                        // 1 Sekunde Pause, damit OpenStreetMap uns nicht wegen Spam blockiert
                         await new Promise(r => setTimeout(r, 1000));
                     }
                 }
 
-                // 2. Flüge hochladen
                 stat.textContent = `Importiere ${flights.length} Flüge in die Datenbank...`;
                 let count = 0;
                 for(let f of flights) {
-                    if(!resolvedLocations[f.fromIcao] || !resolvedLocations[f.toIcao]) continue; // Überspringe Fehlerhafte
+                    if(!resolvedLocations[f.fromIcao] || !resolvedLocations[f.toIcao]) continue;
                     await addDoc(collection(db, "flights"), f);
                     await setDoc(doc(db, "locations", f.fromIcao), { departures: increment(1) }, { merge: true });
                     await setDoc(doc(db, "locations", f.toIcao), { landings: increment(1) }, { merge: true });
