@@ -4,15 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>fly-cardinal</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* DVH (Dynamic Viewport Height) behebt den Mobile-Safari Bug mit der URL-Leiste */
+        /* DVH behebt den Mobile-Safari Bug mit der URL-Leiste */
         body { font-family: 'Inter', sans-serif; background-color: #f9fafb; overflow-x: hidden; margin: 0; padding: 0; }
         
-        /* Navigation Hide/Show Klassen - min-height nutzt jetzt dvh! */
-        .view-section { display: none; flex-direction: column; flex-grow: 1; min-height: calc(100dvh - 64px); }
-        .view-section.active { display: flex; }
+        /* FIX: !important zwingt den Browser, die inaktiven Sections auszublenden, egal was Tailwind sagt! */
+        .view-section:not(.active) { display: none !important; }
+        .view-section.active { display: flex; flex-direction: column; flex-grow: 1; }
 
         /* Slideshow Animation */
         .slide { transition: opacity 1s ease-in-out; opacity: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -30,11 +32,13 @@
         .label { display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.25rem; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col min-h-[100dvh]">
 
-    <nav class="bg-white shadow-md sticky top-0 z-[10000] w-full">
+    <!-- GEMEINSAME NAVIGATION -->
+    <nav class="bg-white shadow-md sticky top-0 z-[10000] w-full h-[64px]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
+                <!-- Logo -->
                 <div class="flex items-center">
                     <a href="#home" class="flex-shrink-0 flex items-center gap-2">
                         <img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773184165/Cardinal_Bird_sntrqv.png" alt="fly-cardinal Logo" class="h-10 w-auto">
@@ -42,20 +46,24 @@
                     </a>
                 </div>
                 
+                <!-- Desktop Menü -->
                 <div class="hidden md:flex md:items-center md:space-x-8">
                     <a href="#home" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="home">Start</a>
                     <a href="#map" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="map">Flugkarte</a>
                     <a href="#home" class="text-gray-600 hover:text-blue-600 font-medium transition-colors" onclick="alert('Crew Seite folgt noch!')">Crew</a>
                     
+                    <!-- Admin Links -->
                     <div id="authMenu" class="hidden items-center space-x-4 border-l pl-4 border-gray-200">
                         <a href="#edit" class="nav-link text-green-600 hover:text-green-700 font-bold text-sm" data-target="edit">+ Flug eintragen</a>
                         <a href="#admin" class="nav-link text-purple-600 hover:text-purple-700 font-bold text-sm" data-target="admin">Admin</a>
                         <button id="navLogoutBtn" class="text-gray-500 hover:text-red-600 font-medium text-sm">Abmelden</button>
                     </div>
 
+                    <!-- Login Button -->
                     <a href="#login" id="navLoginBtn" class="nav-link bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-md transition-colors text-sm" data-target="login">Mitglied Login</a>
                 </div>
 
+                <!-- Mobile Burger Button -->
                 <div class="flex items-center md:hidden">
                     <button id="mobileMenuBtn" class="text-gray-500 hover:text-gray-800 focus:outline-none p-2">
                         <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,7 +74,8 @@
             </div>
         </div>
 
-        <div id="mobileMenu" class="hidden flex-col md:hidden bg-white absolute w-full left-0 top-16 shadow-xl border-t border-gray-100 z-[9999]">
+        <!-- Mobile Menü Container -->
+        <div id="mobileMenu" class="hidden flex-col md:hidden bg-white absolute w-full left-0 top-[64px] shadow-xl border-t border-gray-100 z-[9999]">
             <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Start</a>
             <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Flugkarte</a>
             <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50" onclick="alert('Crew Seite folgt noch!')">Crew</a>
@@ -81,8 +90,11 @@
         </div>
     </nav>
 
+    <!-- ========================================== -->
+    <!-- VIEW: STARTSEITE (#home)                   -->
+    <!-- ========================================== -->
     <section id="view-home" class="view-section active">
-        <header class="relative bg-gray-900 h-[60vh] md:h-[70vh] overflow-hidden flex items-center justify-center">
+        <header class="relative bg-gray-900 h-[60vh] md:h-[70vh] overflow-hidden flex items-center justify-center shrink-0">
             <div id="slideshow" class="absolute inset-0 w-full h-full">
                 <img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg" class="slide active">
                 <div class="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
@@ -99,7 +111,7 @@
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 w-full">
             <section class="text-center max-w-3xl mx-auto">
                 <h2 class="text-3xl font-bold text-gray-900 mb-6">Über uns</h2>
                 <p class="text-lg text-gray-600 leading-relaxed">Hier noch mehr Text</p>
@@ -110,10 +122,14 @@
                 <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773185095/54072_1634383168_u1dqnf.jpg" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Der Flieger</h3><p class="text-gray-600 mb-4">Entdecke unsere Cessna 177</p><a href="#" class="text-blue-600 font-semibold">Flieger entdecken &rarr;</a></div></div>
             </section>
         </main>
-        <footer class="bg-gray-900 text-gray-400 py-12 mt-auto"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
+        <footer class="bg-gray-900 text-gray-400 py-12 mt-auto shrink-0 w-full"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
     </section>
 
-    <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden">
+    <!-- ========================================== -->
+    <!-- VIEW: ÖFFENTLICHE KARTE (#map)             -->
+    <!-- ========================================== -->
+    <!-- FIX: Feste Höhe, damit die Karte den gesamten Platz ausfüllt -->
+    <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden w-full block" style="height: calc(100dvh - 64px);">
         <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
         
         <div id="bottomSheet" class="absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[10] max-h-[85vh] flex flex-col">
@@ -131,7 +147,10 @@
         </div>
     </section>
 
-    <section id="view-login" class="view-section items-center justify-center bg-gray-100 px-4">
+    <!-- ========================================== -->
+    <!-- VIEW: LOGIN (#login)                       -->
+    <!-- ========================================== -->
+    <section id="view-login" class="view-section items-center justify-center bg-gray-100 px-4" style="height: calc(100dvh - 64px);">
         <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center">
             <h3 class="text-2xl font-bold mb-6 text-gray-800">Mitglieds-Login</h3>
             <input type="email" id="loginEmail" placeholder="E-Mail" class="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required>
@@ -143,9 +162,12 @@
         </div>
     </section>
 
-    <section id="view-edit" class="view-section p-4 flex flex-col md:flex-row gap-4 bg-gray-100 overflow-y-auto">
-        <div class="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-md flex flex-col">
-            <h3 class="text-xl font-bold text-gray-800 mb-6">Neuen Flug eintragen</h3>
+    <!-- ========================================== -->
+    <!-- VIEW: FLUG EINTRAGEN (#edit)               -->
+    <!-- ========================================== -->
+    <section id="view-edit" class="view-section p-4 flex-col md:flex-row gap-4 bg-gray-100 overflow-y-auto" style="height: calc(100dvh - 64px);">
+        <div class="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-md flex flex-col h-auto md:h-full overflow-y-auto z-10">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 shrink-0">Neuen Flug eintragen</h3>
             <div class="space-y-4 flex-grow">
                 <div><label class="label">Start (ICAO)</label><input type="text" id="fromIcao" class="input-field uppercase" maxlength="4" required><div id="fromResult" class="text-xs mt-1 h-4"></div></div>
                 <div><label class="label">Ziel (ICAO)</label><input type="text" id="toIcao" class="input-field uppercase" maxlength="4" required><div id="toResult" class="text-xs mt-1 h-4"></div></div>
@@ -158,21 +180,26 @@
                 </div>
                 <div><label class="label">Notizen</label><textarea id="notes" rows="2" class="input-field resize-none"></textarea></div>
             </div>
-            <div class="mt-6">
+            <div class="mt-6 shrink-0">
                 <button id="saveFlightBtn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow disabled:opacity-50">Speichern</button>
                 <div id="saveFlightStatus" class="text-center text-sm font-semibold h-5 mt-2"></div>
             </div>
         </div>
-        <div class="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[300px] md:min-h-[400px] relative">
+        <!-- Die Map im Editor füllt auf dem Desktop den Rest und auf dem Handy den unteren Bereich -->
+        <div class="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[400px] relative w-full z-0">
             <div id="editMap" class="w-full h-full absolute inset-0 z-0"></div>
         </div>
     </section>
 
+    <!-- ========================================== -->
+    <!-- VIEW: ADMIN DASHBOARD (#admin)             -->
+    <!-- ========================================== -->
     <section id="view-admin" class="view-section p-4 bg-gray-100 overflow-y-auto">
         <div class="max-w-5xl mx-auto w-full">
             <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-2 sm:mt-4">
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">fly-cardinal Admin Dashboard</h2>
                 
+                <!-- BILDER UPLOAD -->
                 <div class="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
                     <h3 class="font-bold text-gray-700 mb-2">Slideshow Bilder hochladen</h3>
                     <input type="file" id="imageUpload" accept="image/*" class="hidden">
@@ -182,11 +209,13 @@
                     <div id="uploadStatus" class="mt-3 font-semibold text-sm h-5"></div>
                 </div>
 
+                <!-- BILDER GALERIE -->
                 <h3 class="font-bold text-gray-700 mb-3">Aktuelle Bilder in der Slideshow:</h3>
                 <div id="imagesGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-12"></div>
                 
                 <hr class="border-gray-200 mb-8">
 
+                <!-- MASSEN-IMPORT FÜR FLÜGE -->
                 <div class="bg-blue-50 p-4 sm:p-6 rounded-xl border border-blue-200">
                     <h3 class="font-bold text-blue-900 mb-2 text-lg sm:text-xl">CSV Massen-Import (Flüge)</h3>
                     <p class="text-xs sm:text-sm text-blue-700 mb-4">Format: <code class="bg-blue-100 px-1 rounded break-all">Datum,Wer ist geflogen,Start,Landung,Start,Landung</code></p>
@@ -198,6 +227,9 @@
         </div>
     </section>
 
+    <!-- ========================================== -->
+    <!-- SCRIPTE & LOGIK                            -->
+    <!-- ========================================== -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -235,19 +267,24 @@
             if (['#edit', '#admin'].includes(hash) && !currentUser) { intendedRoute = hash; hash = '#login'; }
             
             mobileMenu.classList.add('hidden'); mobileMenu.classList.remove('flex');
+            
+            // Alle Sektionen bereinigen
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            
+            // Ziel aktivieren
             const target = document.getElementById(`view-${hash.substring(1)}`);
             (target ? target : document.getElementById('view-home')).classList.add('active');
             
-            // FIX: Doppelte Leaflet Invalidierung nach dem Sichtbarwerden für Mobile Browser
+            // FIX: Mehrfaches Invalidieren für Handys, da sich der Viewport leicht ändert
             if (hash === '#map') {
                 initPublicMap();
-                setTimeout(() => { if (publicMapInstance) publicMapInstance.invalidateSize(); }, 100);
-                setTimeout(() => { if (publicMapInstance) publicMapInstance.invalidateSize(); }, 500);
+                setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 50);
+                setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 300);
             }
             if (hash === '#edit') {
                 initEditMap();
-                setTimeout(() => { if (editMapInstance) editMapInstance.invalidateSize(); }, 100);
+                setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, 50);
+                setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, 300);
             }
             if (hash === '#admin') loadGallery();
             if (hash === '#home') initSlideshow();
