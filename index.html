@@ -2,17 +2,16 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>fly-cardinal</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; overflow-x: hidden; }
+        /* DVH (Dynamic Viewport Height) behebt den Mobile-Safari Bug mit der URL-Leiste */
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; overflow-x: hidden; margin: 0; padding: 0; }
         
-        /* Navigation Hide/Show Klassen */
-        .view-section { display: none; flex-direction: column; flex-grow: 1; min-h: calc(100vh - 64px); }
+        /* Navigation Hide/Show Klassen - min-height nutzt jetzt dvh! */
+        .view-section { display: none; flex-direction: column; flex-grow: 1; min-height: calc(100dvh - 64px); }
         .view-section.active { display: flex; }
 
         /* Slideshow Animation */
@@ -33,11 +32,9 @@
 </head>
 <body class="flex flex-col min-h-screen">
 
-    <!-- GEMEINSAME NAVIGATION -->
-    <nav class="bg-white shadow-md sticky top-0 z-[10000] relative">
+    <nav class="bg-white shadow-md sticky top-0 z-[10000] w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
-                <!-- Logo -->
                 <div class="flex items-center">
                     <a href="#home" class="flex-shrink-0 flex items-center gap-2">
                         <img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773184165/Cardinal_Bird_sntrqv.png" alt="fly-cardinal Logo" class="h-10 w-auto">
@@ -45,24 +42,20 @@
                     </a>
                 </div>
                 
-                <!-- Desktop Menü (Versteckt auf Handys) -->
                 <div class="hidden md:flex md:items-center md:space-x-8">
                     <a href="#home" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="home">Start</a>
                     <a href="#map" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="map">Flugkarte</a>
                     <a href="#home" class="text-gray-600 hover:text-blue-600 font-medium transition-colors" onclick="alert('Crew Seite folgt noch!')">Crew</a>
                     
-                    <!-- Admin Links (Nur sichtbar wenn eingeloggt) -->
                     <div id="authMenu" class="hidden items-center space-x-4 border-l pl-4 border-gray-200">
                         <a href="#edit" class="nav-link text-green-600 hover:text-green-700 font-bold text-sm" data-target="edit">+ Flug eintragen</a>
                         <a href="#admin" class="nav-link text-purple-600 hover:text-purple-700 font-bold text-sm" data-target="admin">Admin</a>
                         <button id="navLogoutBtn" class="text-gray-500 hover:text-red-600 font-medium text-sm">Abmelden</button>
                     </div>
 
-                    <!-- Login Button (Sichtbar wenn ausgeloggt) -->
                     <a href="#login" id="navLoginBtn" class="nav-link bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-md transition-colors text-sm" data-target="login">Mitglied Login</a>
                 </div>
 
-                <!-- Mobile Burger Button -->
                 <div class="flex items-center md:hidden">
                     <button id="mobileMenuBtn" class="text-gray-500 hover:text-gray-800 focus:outline-none p-2">
                         <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -73,32 +66,24 @@
             </div>
         </div>
 
-        <!-- Mobile Menü Container (Drop-Down) -->
         <div id="mobileMenu" class="hidden flex-col md:hidden bg-white absolute w-full left-0 top-16 shadow-xl border-t border-gray-100 z-[9999]">
             <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Start</a>
             <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Flugkarte</a>
             <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50" onclick="alert('Crew Seite folgt noch!')">Crew</a>
             
-            <!-- Admin Links Mobile (Nur sichtbar wenn eingeloggt) -->
             <div id="mobileAuthMenu" class="hidden flex-col bg-gray-50">
                 <a href="#edit" class="px-6 py-4 text-green-600 font-bold border-b border-gray-100">+ Flug eintragen</a>
                 <a href="#admin" class="px-6 py-4 text-purple-600 font-bold border-b border-gray-100">Admin Dashboard</a>
                 <button id="mobileNavLogoutBtn" class="text-left px-6 py-4 text-red-600 font-bold hover:bg-gray-100">Abmelden</button>
             </div>
 
-            <!-- Login Button Mobile (Sichtbar wenn ausgeloggt) -->
             <a href="#login" id="mobileNavLoginBtn" class="px-6 py-4 text-blue-600 font-bold bg-blue-50 hover:bg-blue-100">Mitglied Login</a>
         </div>
     </nav>
 
-    <!-- ========================================== -->
-    <!-- VIEW: STARTSEITE (#home)                   -->
-    <!-- ========================================== -->
     <section id="view-home" class="view-section active">
-        <!-- SLIDESHOW -->
         <header class="relative bg-gray-900 h-[60vh] md:h-[70vh] overflow-hidden flex items-center justify-center">
             <div id="slideshow" class="absolute inset-0 w-full h-full">
-                <!-- Fallback, wird überschrieben sobald geladen -->
                 <img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg" class="slide active">
                 <div class="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
             </div>
@@ -114,7 +99,6 @@
             </div>
         </header>
 
-        <!-- INFO CARDS -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
             <section class="text-center max-w-3xl mx-auto">
                 <h2 class="text-3xl font-bold text-gray-900 mb-6">Über uns</h2>
@@ -129,10 +113,7 @@
         <footer class="bg-gray-900 text-gray-400 py-12 mt-auto"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VIEW: ÖFFENTLICHE KARTE (#map)             -->
-    <!-- ========================================== -->
-    <section id="view-map" class="view-section relative bg-gray-200">
+    <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden">
         <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
         
         <div id="bottomSheet" class="absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[10] max-h-[85vh] flex flex-col">
@@ -150,25 +131,18 @@
         </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VIEW: LOGIN (#login)                       -->
-    <!-- ========================================== -->
     <section id="view-login" class="view-section items-center justify-center bg-gray-100 px-4">
         <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center">
             <h3 class="text-2xl font-bold mb-6 text-gray-800">Mitglieds-Login</h3>
             <input type="email" id="loginEmail" placeholder="E-Mail" class="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required>
             <input type="password" id="loginPassword" placeholder="Passwort" class="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required>
             <button id="actionLoginBtn" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg transition-colors">Einloggen</button>
-            
             <div class="my-4 border-t border-gray-200 relative"><span class="absolute top-[-10px] left-1/2 transform -translate-x-1/2 bg-white px-2 text-gray-400 text-sm">oder</span></div>
             <button id="actionGoogleBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors">Mit Google anmelden</button>
             <div id="loginErrorMsg" class="text-red-500 mt-4 text-sm font-semibold"></div>
         </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VIEW: FLUG EINTRAGEN (#edit)               -->
-    <!-- ========================================== -->
     <section id="view-edit" class="view-section p-4 flex flex-col md:flex-row gap-4 bg-gray-100 overflow-y-auto">
         <div class="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-md flex flex-col">
             <h3 class="text-xl font-bold text-gray-800 mb-6">Neuen Flug eintragen</h3>
@@ -189,20 +163,16 @@
                 <div id="saveFlightStatus" class="text-center text-sm font-semibold h-5 mt-2"></div>
             </div>
         </div>
-        <div class="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[400px] relative">
+        <div class="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[300px] md:min-h-[400px] relative">
             <div id="editMap" class="w-full h-full absolute inset-0 z-0"></div>
         </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VIEW: ADMIN DASHBOARD (#admin)             -->
-    <!-- ========================================== -->
     <section id="view-admin" class="view-section p-4 bg-gray-100 overflow-y-auto">
         <div class="max-w-5xl mx-auto w-full">
             <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-2 sm:mt-4">
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">fly-cardinal Admin Dashboard</h2>
                 
-                <!-- BILDER UPLOAD -->
                 <div class="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
                     <h3 class="font-bold text-gray-700 mb-2">Slideshow Bilder hochladen</h3>
                     <input type="file" id="imageUpload" accept="image/*" class="hidden">
@@ -212,32 +182,22 @@
                     <div id="uploadStatus" class="mt-3 font-semibold text-sm h-5"></div>
                 </div>
 
-                <!-- BILDER GALERIE -->
                 <h3 class="font-bold text-gray-700 mb-3">Aktuelle Bilder in der Slideshow:</h3>
                 <div id="imagesGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-12"></div>
                 
                 <hr class="border-gray-200 mb-8">
 
-                <!-- MASSEN-IMPORT FÜR FLÜGE -->
                 <div class="bg-blue-50 p-4 sm:p-6 rounded-xl border border-blue-200">
                     <h3 class="font-bold text-blue-900 mb-2 text-lg sm:text-xl">CSV Massen-Import (Flüge)</h3>
                     <p class="text-xs sm:text-sm text-blue-700 mb-4">Format: <code class="bg-blue-100 px-1 rounded break-all">Datum,Wer ist geflogen,Start,Landung,Start,Landung</code></p>
-                    
                     <textarea id="importCsvData" rows="6" class="w-full p-3 border border-blue-300 rounded-lg outline-none focus:border-blue-500 mb-4 font-mono text-xs sm:text-sm" placeholder="Füge hier deine Zeilen ein..."></textarea>
-                    
-                    <button id="runImportBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-colors disabled:opacity-50">
-                        Daten analysieren & importieren
-                    </button>
+                    <button id="runImportBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-colors disabled:opacity-50">Daten analysieren & importieren</button>
                     <div id="importStatus" class="mt-3 font-semibold text-sm"></div>
                 </div>
-
             </div>
         </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- SCRIPTE & LOGIK                            -->
-    <!-- ========================================== -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -264,37 +224,31 @@
         let publicMapInstance = null;
         let editMapInstance = null;
 
-        // --- MOBILE MENU LOGIK ---
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileMenu = document.getElementById('mobileMenu');
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-            mobileMenu.classList.toggle('flex');
-        });
-
-        // Versteckt das Menü, wenn ein Link angeklickt wird
-        document.querySelectorAll('#mobileMenu a, #mobileMenu button').forEach(el => {
-            el.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
-                mobileMenu.classList.remove('flex');
-            });
-        });
+        mobileMenuBtn.addEventListener('click', () => { mobileMenu.classList.toggle('hidden'); mobileMenu.classList.toggle('flex'); });
+        document.querySelectorAll('#mobileMenu a, #mobileMenu button').forEach(el => { el.addEventListener('click', () => { mobileMenu.classList.add('hidden'); mobileMenu.classList.remove('flex'); }); });
 
         // --- 1. ROUTING ---
         function handleRouting() {
             let hash = window.location.hash || '#home';
             if (['#edit', '#admin'].includes(hash) && !currentUser) { intendedRoute = hash; hash = '#login'; }
             
-            // Schließe Mobile Menu bei Routenwechsel
-            mobileMenu.classList.add('hidden');
-            mobileMenu.classList.remove('flex');
-
+            mobileMenu.classList.add('hidden'); mobileMenu.classList.remove('flex');
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             const target = document.getElementById(`view-${hash.substring(1)}`);
             (target ? target : document.getElementById('view-home')).classList.add('active');
             
-            if (hash === '#map') initPublicMap();
-            if (hash === '#edit') initEditMap();
+            // FIX: Doppelte Leaflet Invalidierung nach dem Sichtbarwerden für Mobile Browser
+            if (hash === '#map') {
+                initPublicMap();
+                setTimeout(() => { if (publicMapInstance) publicMapInstance.invalidateSize(); }, 100);
+                setTimeout(() => { if (publicMapInstance) publicMapInstance.invalidateSize(); }, 500);
+            }
+            if (hash === '#edit') {
+                initEditMap();
+                setTimeout(() => { if (editMapInstance) editMapInstance.invalidateSize(); }, 100);
+            }
             if (hash === '#admin') loadGallery();
             if (hash === '#home') initSlideshow();
         }
@@ -304,33 +258,19 @@
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
-                // Desktop
-                document.getElementById('authMenu').classList.replace('hidden', 'flex');
-                document.getElementById('navLoginBtn').classList.add('hidden');
-                // Mobile
-                document.getElementById('mobileAuthMenu').classList.replace('hidden', 'flex');
-                document.getElementById('mobileNavLoginBtn').classList.add('hidden');
-
-                if(window.location.hash === '#login' || window.location.hash === '') window.location.hash = intendedRoute !== '#login' ? intendedRoute : '#home';
-                else handleRouting();
+                document.getElementById('authMenu').classList.replace('hidden', 'flex'); document.getElementById('navLoginBtn').classList.add('hidden');
+                document.getElementById('mobileAuthMenu').classList.replace('hidden', 'flex'); document.getElementById('mobileNavLoginBtn').classList.add('hidden');
+                if(window.location.hash === '#login' || window.location.hash === '') window.location.hash = intendedRoute !== '#login' ? intendedRoute : '#home'; else handleRouting();
             } else {
-                // Desktop
-                document.getElementById('authMenu').classList.replace('flex', 'hidden');
-                document.getElementById('navLoginBtn').classList.remove('hidden');
-                // Mobile
-                document.getElementById('mobileAuthMenu').classList.replace('flex', 'hidden');
-                document.getElementById('mobileNavLoginBtn').classList.remove('hidden');
-                
+                document.getElementById('authMenu').classList.replace('flex', 'hidden'); document.getElementById('navLoginBtn').classList.remove('hidden');
+                document.getElementById('mobileAuthMenu').classList.replace('flex', 'hidden'); document.getElementById('mobileNavLoginBtn').classList.remove('hidden');
                 handleRouting();
             }
         });
         document.getElementById('actionLoginBtn').addEventListener('click', () => signInWithEmailAndPassword(auth, document.getElementById('loginEmail').value, document.getElementById('loginPassword').value).catch(() => document.getElementById('loginErrorMsg').textContent = "Login fehlgeschlagen."));
         document.getElementById('actionGoogleBtn').addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()).catch(() => document.getElementById('loginErrorMsg').textContent = "Google Fehler."));
-        
-        // Logout Buttons (Desktop & Mobile)
         const logoutAction = () => { signOut(auth); window.location.hash = '#home'; };
-        document.getElementById('navLogoutBtn').addEventListener('click', logoutAction);
-        document.getElementById('mobileNavLogoutBtn').addEventListener('click', logoutAction);
+        document.getElementById('navLogoutBtn').addEventListener('click', logoutAction); document.getElementById('mobileNavLogoutBtn').addEventListener('click', logoutAction);
 
         // --- 3. SLIDESHOW ---
         let slideshowInterval;
@@ -347,9 +287,7 @@
                 const slides = container.querySelectorAll('.slide');
                 if (slides.length > 1) {
                     let current = 0;
-                    slideshowInterval = setInterval(() => {
-                        slides[current].classList.remove('active'); current = (current + 1) % slides.length; slides[current].classList.add('active');
-                    }, 5000);
+                    slideshowInterval = setInterval(() => { slides[current].classList.remove('active'); current = (current + 1) % slides.length; slides[current].classList.add('active'); }, 5000);
                 }
             } catch (e) {}
         }
@@ -365,7 +303,7 @@
 
         // --- 5. ÖFFENTLICHE KARTE ---
         let publicMarkers = [], publicLines = [], publicActiveMarker = null, mapLocCache = {};
-        let currentSheetFlights = [];
+        let currentSheetFlights = []; let currentSheetIcao = null;
         const defIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#3b82f6" class="w-8 h-8 drop-shadow-md"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [32, 32], iconAnchor: [16, 32] });
         const actIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#ef4444" class="w-10 h-10 drop-shadow-lg"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [40, 40], iconAnchor: [20, 40] });
 
@@ -377,13 +315,12 @@
                     publicMarkers.forEach(m => publicMapInstance.removeLayer(m)); publicMarkers = []; mapLocCache = {};
                     snapshot.forEach((doc) => {
                         const loc = doc.data(); mapLocCache[doc.id] = loc;
-                        if (!loc.landings || loc.landings === 0) return;
+                        if ((loc.landings || 0) === 0 && (loc.departures || 0) === 0) return;
                         const m = L.marker([loc.lat, loc.lon], { icon: defIcon }).addTo(publicMapInstance);
-                        m.on('click', () => openSheet(doc.id, loc.name, loc.landings, m, loc.lat, loc.lon)); publicMarkers.push(m);
+                        m.on('click', () => openSheet(doc.id, loc.name, m, loc.lat, loc.lon)); publicMarkers.push(m);
                     });
                 });
             }
-            setTimeout(() => publicMapInstance.invalidateSize(), 300);
         }
 
         function resetMapHighlights() {
@@ -391,30 +328,36 @@
             publicLines.forEach(l => publicMapInstance.removeLayer(l)); publicLines = [];
         }
 
-        async function openSheet(icao, name, total, marker, toLat, toLon) {
+        async function openSheet(icao, name, marker, toLat, toLon) {
             resetMapHighlights(); publicActiveMarker = marker; marker.setIcon(actIcon); marker.setZIndexOffset(1000);
-            document.getElementById('sheetTitle').textContent = `${icao} - ${name}`; document.getElementById('sheetSubtitle').textContent = `${total} Landungen`; document.getElementById('sheetContent').innerHTML = 'Lade...'; document.getElementById('bottomSheet').classList.remove('translate-y-full');
-            
-            document.getElementById('sortSelect').classList.add('hidden');
-            document.getElementById('sortSelect').value = 'date';
+            currentSheetIcao = icao;
+            document.getElementById('sheetTitle').textContent = `${icao} - ${name}`; document.getElementById('sheetSubtitle').textContent = `Lade...`; document.getElementById('sheetContent').innerHTML = '<div class="text-gray-500">Flüge werden geladen...</div>'; document.getElementById('bottomSheet').classList.remove('translate-y-full');
+            document.getElementById('sortSelect').classList.add('hidden'); document.getElementById('sortSelect').value = 'date';
             
             try {
-                const snap = await getDocs(query(collection(db, "flights"), where("toIcao", "==", icao)));
-                let flights = []; let starts = new Set();
-                snap.forEach(d => { flights.push(d.data()); starts.add(d.data().fromIcao); });
-                currentSheetFlights = flights;
-
+                const [snapTo, snapFrom] = await Promise.all([ getDocs(query(collection(db, "flights"), where("toIcao", "==", icao))), getDocs(query(collection(db, "flights"), where("fromIcao", "==", icao))) ]);
+                let flightsMap = new Map(); snapTo.forEach(d => flightsMap.set(d.id, d.data())); snapFrom.forEach(d => flightsMap.set(d.id, d.data()));
+                currentSheetFlights = Array.from(flightsMap.values()); currentSheetFlights.sort((a,b) => new Date(b.date) - new Date(a.date));
+                document.getElementById('sheetSubtitle').textContent = `${currentSheetFlights.length} Flug/Flüge verzeichnet`;
                 if (currentSheetFlights.length > 0) document.getElementById('sortSelect').classList.remove('hidden');
 
-                starts.forEach(async fromIcao => {
-                    if (fromIcao === icao) return;
-                    let coords = mapLocCache[fromIcao] || await fetchOverpass(fromIcao);
-                    if (coords) {
-                        const mLat = (coords.lat + toLat)/2, mLng = (coords.lon + toLon)/2; const cLat = mLat - (toLon - coords.lon)*0.2, cLng = mLng + (toLat - coords.lat)*0.2;
-                        let pts = []; for(let t=0; t<=1; t+=0.05) pts.push([(1-t)*(1-t)*coords.lat + 2*(1-t)*t*cLat + t*t*toLat, (1-t)*(1-t)*coords.lon + 2*(1-t)*t*cLng + t*t*toLon]);
-                        publicLines.push(L.polyline(pts, {color: '#ef4444', weight: 3, opacity: 0.8, dashArray: '8,8'}).addTo(publicMapInstance));
+                let routes = new Set(); currentSheetFlights.forEach(f => { if(f.fromIcao !== f.toIcao) routes.add(`${f.fromIcao}-${f.toIcao}`); });
+                for (let routeStr of routes) {
+                    let [fromIcao, toIcao] = routeStr.split('-'); let isOutgoing = (fromIcao === icao);
+                    let fCoords = (fromIcao === icao) ? {lat: toLat, lon: toLon} : (mapLocCache[fromIcao] || await fetchOverpass(fromIcao));
+                    let tCoords = (toIcao === icao) ? {lat: toLat, lon: toLon} : (mapLocCache[toIcao] || await fetchOverpass(toIcao));
+                    if (fCoords && tCoords) {
+                        const mLat = (fCoords.lat + tCoords.lat)/2, mLng = (fCoords.lon + tCoords.lon)/2; const cLat = mLat - (tCoords.lon - fCoords.lon)*0.2, cLng = mLng + (tCoords.lat - fCoords.lat)*0.2;
+                        let pts = []; for(let t=0; t<=1; t+=0.05) pts.push([(1-t)*(1-t)*fCoords.lat + 2*(1-t)*t*cLat + t*t*tCoords.lat, (1-t)*(1-t)*fCoords.lon + 2*(1-t)*t*cLng + t*t*tCoords.lon]);
+                        const lineColor = isOutgoing ? '#3b82f6' : '#ef4444';
+                        publicLines.push(L.polyline(pts, {color: lineColor, weight: 3, opacity: 0.8, dashArray: '8,8'}).addTo(publicMapInstance));
+                        const midIdx = Math.floor(pts.length / 2); const p1 = publicMapInstance.latLngToLayerPoint(pts[midIdx - 1]); const p2 = publicMapInstance.latLngToLayerPoint(pts[midIdx + 1]);
+                        const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+                        const arrowSvg = `<svg style="transform: rotate(${angle}deg); transform-origin: center;" width="16" height="16" viewBox="0 0 24 24" fill="${lineColor}"><path d="M24 12l-18 12v-24z"/></svg>`;
+                        const arrowIcon = L.divIcon({ className: 'bg-transparent', html: arrowSvg, iconSize: [16, 16], iconAnchor: [8, 8] });
+                        publicLines.push(L.marker(pts[midIdx], {icon: arrowIcon, interactive: false}).addTo(publicMapInstance));
                     }
-                });
+                }
                 renderSheetContent();
             } catch(e) { document.getElementById('sheetContent').innerHTML = 'Fehler beim Laden.'; }
         }
@@ -422,18 +365,22 @@
         function renderSheetContent() {
             const sortBy = document.getElementById('sortSelect').value; const contentDiv = document.getElementById('sheetContent'); let html = '';
             const formatDate = (dStr) => { const d = new Date(dStr); return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getFullYear()).slice(-2)}`; };
-            const flightHtml = (f) => `<details class="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-3"><summary class="p-4 cursor-pointer flex justify-between hover:bg-gray-50"><div class="font-bold text-sm sm:text-base">${formatDate(f.date)} <span class="text-gray-400 font-normal ml-2">${f.fromIcao} ➔ ${f.toIcao}</span></div><div class="group-open:rotate-180 transform transition-transform text-gray-400">▼</div></summary><div class="p-4 bg-gray-50 text-xs sm:text-sm border-t border-gray-100 text-gray-700">${f.startTime ? 'Start: '+f.startTime+' Uhr<br>' : ''}${f.endTime ? 'Landung: '+f.endTime+' Uhr<br>' : ''}${f.notes ? '<i class="mt-2 block text-gray-500">"'+f.notes+'"</i>' : ''}</div></details>`;
+            const flightHtml = (f) => {
+                const isOutgoing = f.fromIcao === currentSheetIcao; const badge = isOutgoing ? '<span class="text-blue-600 bg-blue-100 px-2 py-0.5 rounded mr-2">Abflug</span>' : '<span class="text-red-600 bg-red-100 px-2 py-0.5 rounded mr-2">Ankunft</span>';
+                return `<details class="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-3"><summary class="p-4 cursor-pointer flex justify-between hover:bg-gray-50 items-center"><div class="font-bold text-sm sm:text-base flex items-center">${badge} ${formatDate(f.date)} <span class="text-gray-400 font-normal ml-2">${f.fromIcao} ➔ ${f.toIcao}</span></div><div class="group-open:rotate-180 transform transition-transform text-gray-400">▼</div></summary><div class="p-4 bg-gray-50 text-xs sm:text-sm border-t border-gray-100 text-gray-700">${f.startTime ? 'Start: '+f.startTime+' Uhr<br>' : ''}${f.endTime ? 'Landung: '+f.endTime+' Uhr<br>' : ''}${f.notes ? '<i class="mt-2 block text-gray-500">"'+f.notes+'"</i>' : ''}</div></details>`;
+            };
 
             if (currentSheetFlights.length === 0) { contentDiv.innerHTML = 'Keine Flüge gefunden.'; return; }
-            if (sortBy === 'date') {
-                currentSheetFlights.sort((a,b) => new Date(b.date) - new Date(a.date));
-                html += '<div class="space-y-3">'; currentSheetFlights.forEach(f => { html += flightHtml(f); }); html += '</div>';
+            if (sortBy === 'date') { html += '<div class="space-y-3">'; currentSheetFlights.forEach(f => { html += flightHtml(f); }); html += '</div>';
             } else if (sortBy === 'frequency') {
-                const groups = {}; currentSheetFlights.forEach(f => { if (!groups[f.fromIcao]) groups[f.fromIcao] = []; groups[f.fromIcao].push(f); });
-                Object.entries(groups).sort((a, b) => b[1].length - a[1].length).forEach(([fromIcao, flightsInGroup]) => {
-                    flightsInGroup.sort((a,b) => new Date(b.date) - new Date(a.date));
-                    html += `<div class="mb-6"><div class="flex items-center gap-2 mb-3 px-2"><span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">Von ${fromIcao}</span><span class="text-gray-500 text-xs sm:text-sm">${flightsInGroup.length} Flug${flightsInGroup.length !== 1 ? 'e' : ''}</span></div><div class="space-y-0 pl-2 border-l-2 border-blue-200">`;
-                    flightsInGroup.forEach(f => { html += flightHtml(f); }); html += `</div></div>`;
+                const groups = {}; currentSheetFlights.forEach(f => { 
+                    const isOutgoing = f.fromIcao === currentSheetIcao; const partnerIcao = isOutgoing ? f.toIcao : f.fromIcao; const label = isOutgoing ? `Nach ${partnerIcao}` : `Von ${partnerIcao}`;
+                    if (!groups[label]) groups[label] = { label, isOutgoing, flights: [] }; groups[label].flights.push(f); 
+                });
+                Object.values(groups).sort((a, b) => b.flights.length - a.flights.length).forEach(group => {
+                    const colorClass = group.isOutgoing ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'; const borderClass = group.isOutgoing ? 'border-blue-200' : 'border-red-200';
+                    html += `<div class="mb-6"><div class="flex items-center gap-2 mb-3 px-2"><span class="${colorClass} text-xs font-bold px-2 py-1 rounded">${group.label}</span><span class="text-gray-500 text-xs sm:text-sm">${group.flights.length} Flug${group.flights.length !== 1 ? 'e' : ''}</span></div><div class="space-y-0 pl-2 border-l-2 ${borderClass}">`;
+                    group.flights.forEach(f => { html += flightHtml(f); }); html += `</div></div>`;
                 });
             }
             contentDiv.innerHTML = html;
@@ -445,7 +392,7 @@
         // --- 6. EDITOR ---
         function initEditMap() {
             if (!editMapInstance) { editMapInstance = L.map('editMap').setView([50.0, 10.0], 5); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(editMapInstance); }
-            setTimeout(() => editMapInstance.invalidateSize(), 300); if(!document.getElementById('date').value) document.getElementById('date').valueAsDate = new Date();
+            if(!document.getElementById('date').value) document.getElementById('date').valueAsDate = new Date();
         }
 
         let editCache = {};
@@ -506,60 +453,33 @@
         window.deleteImg = async (id) => { if(confirm("Bild von der Startseite entfernen?")) { try { await deleteDoc(doc(db, "slideshow_images", id)); } catch(e){} } };
 
         document.getElementById('runImportBtn').addEventListener('click', async () => {
-            const csvText = document.getElementById('importCsvData').value;
-            const stat = document.getElementById('importStatus');
-            const btn = document.getElementById('runImportBtn');
-            if(!csvText) return;
-
-            btn.disabled = true;
-            stat.textContent = "Analysiere CSV Daten...";
-            stat.className = "text-blue-500 mt-3 font-semibold text-sm animate-pulse";
-
+            const csvText = document.getElementById('importCsvData').value; const stat = document.getElementById('importStatus'); const btn = document.getElementById('runImportBtn');
+            if(!csvText) return; btn.disabled = true; stat.textContent = "Analysiere CSV Daten..."; stat.className = "text-blue-500 mt-3 font-semibold text-sm animate-pulse";
             try {
-                const lines = csvText.split('\n').map(l => l.trim()).filter(l => l);
-                const flights = []; const icaos = new Set();
-
+                const lines = csvText.split('\n').map(l => l.trim()).filter(l => l); const flights = []; const icaos = new Set();
                 lines.forEach(line => {
                     const parts = line.split(',');
                     if(parts.length >= 6) {
                         const [dateStr, pilot, fromIcao, toIcao, startTime, endTime] = parts;
                         const dParts = dateStr.split('.');
                         if(dParts.length === 3) {
-                            flights.push({
-                                date: `${dParts[2]}-${dParts[1]}-${dParts[0]}`, // Format: YYYY-MM-DD
-                                pilot: pilot,
-                                fromIcao: fromIcao.toUpperCase(),
-                                toIcao: toIcao.toUpperCase(),
-                                startTime: startTime,
-                                endTime: endTime,
-                                notes: "",
-                                timestamp: new Date()
-                            });
-                            icaos.add(fromIcao.toUpperCase());
-                            icaos.add(toIcao.toUpperCase());
+                            flights.push({ date: `${dParts[2]}-${dParts[1]}-${dParts[0]}`, pilot: pilot, fromIcao: fromIcao.toUpperCase(), toIcao: toIcao.toUpperCase(), startTime: startTime, endTime: endTime, notes: "", timestamp: new Date() });
+                            icaos.add(fromIcao.toUpperCase()); icaos.add(toIcao.toUpperCase());
                         }
                     }
                 });
-
                 if(flights.length === 0) throw new Error("Keine gültigen Zeilen gefunden.");
                 stat.textContent = `${flights.length} Flüge und ${icaos.size} Flughäfen gefunden. Prüfe Koordinaten...`;
-
                 const resolvedLocations = {};
                 for(let icao of icaos) {
                     const docSnap = await getDoc(doc(db, "locations", icao));
-                    if(docSnap.exists()) {
-                        resolvedLocations[icao] = docSnap.data();
-                    } else {
+                    if(docSnap.exists()) { resolvedLocations[icao] = docSnap.data(); } else {
                         stat.textContent = `Suche Koordinaten für neuen Flughafen: ${icao}...`;
                         const opLoc = await fetchOverpass(icao);
-                        if(opLoc) {
-                            resolvedLocations[icao] = opLoc;
-                            await setDoc(doc(db, "locations", icao), { name: opLoc.name || icao, lat: opLoc.lat, lon: opLoc.lon, departures: 0, landings: 0 });
-                        }
+                        if(opLoc) { resolvedLocations[icao] = opLoc; await setDoc(doc(db, "locations", icao), { name: opLoc.name || icao, lat: opLoc.lat, lon: opLoc.lon, departures: 0, landings: 0 }); }
                         await new Promise(r => setTimeout(r, 1000));
                     }
                 }
-
                 stat.textContent = `Importiere ${flights.length} Flüge in die Datenbank...`;
                 let count = 0;
                 for(let f of flights) {
@@ -567,21 +487,10 @@
                     await addDoc(collection(db, "flights"), f);
                     await setDoc(doc(db, "locations", f.fromIcao), { departures: increment(1) }, { merge: true });
                     await setDoc(doc(db, "locations", f.toIcao), { landings: increment(1) }, { merge: true });
-                    count++;
-                    if(count % 10 === 0) stat.textContent = `Importiere... ${count} / ${flights.length} abgeschlossen`;
+                    count++; if(count % 10 === 0) stat.textContent = `Importiere... ${count} / ${flights.length} abgeschlossen`;
                 }
-
-                stat.textContent = `Erfolgreich! ${count} Flüge wurden importiert.`;
-                stat.className = "text-green-500 mt-3 font-semibold text-sm";
-                document.getElementById('importCsvData').value = '';
-
-            } catch (e) {
-                console.error(e);
-                stat.textContent = "Fehler: Überprüfe das CSV Format.";
-                stat.className = "text-red-500 mt-3 font-semibold text-sm";
-            } finally {
-                btn.disabled = false;
-            }
+                stat.textContent = `Erfolgreich! ${count} Flüge wurden importiert.`; stat.className = "text-green-500 mt-3 font-semibold text-sm"; document.getElementById('importCsvData').value = '';
+            } catch (e) { stat.textContent = "Fehler: Überprüfe das CSV Format."; stat.className = "text-red-500 mt-3 font-semibold text-sm"; } finally { btn.disabled = false; }
         });
 
         // INITIALSTART
