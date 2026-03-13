@@ -12,7 +12,7 @@
         /* DVH behebt den Mobile-Safari Bug mit der URL-Leiste */
         body { font-family: 'Inter', sans-serif; background-color: #f9fafb; overflow-x: hidden; margin: 0; padding: 0; }
         
-        /* FIX: !important zwingt den Browser, die inaktiven Sections auszublenden, egal was Tailwind sagt! */
+        /* FIX: !important zwingt den Browser, die inaktiven Sections auszublenden */
         .view-section:not(.active) { display: none !important; }
         .view-section.active { display: flex; flex-direction: column; flex-grow: 1; }
 
@@ -41,26 +41,27 @@
                 <!-- Logo -->
                 <div class="flex items-center">
                     <a href="#home" class="flex-shrink-0 flex items-center gap-2">
-                        <img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773184165/Cardinal_Bird_sntrqv.png" alt="fly-cardinal Logo" class="h-10 w-auto">
+                        <img id="img-logo" src="" alt="fly-cardinal Logo" class="h-10 w-auto">
                         <span class="font-bold text-xl text-gray-900">fly-cardinal</span>
                     </a>
                 </div>
                 
                 <!-- Desktop Menü -->
-                <div class="hidden md:flex md:items-center md:space-x-8">
-                    <a href="#home" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="home">Start</a>
-                    <a href="#map" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors" data-target="map">Flugkarte</a>
-                    <a href="#home" class="text-gray-600 hover:text-blue-600 font-medium transition-colors" onclick="alert('Crew Seite folgt noch!')">Crew</a>
+                <div class="hidden md:flex md:items-center md:space-x-6 lg:space-x-8">
+                    <a href="#home" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors">Start</a>
+                    <a href="#map" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors">Flugkarte</a>
+                    <a href="#crew" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors">Crew</a>
+                    <a href="#flieger" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors">Der Flieger</a>
                     
                     <!-- Admin Links -->
                     <div id="authMenu" class="hidden items-center space-x-4 border-l pl-4 border-gray-200">
-                        <a href="#edit" class="nav-link text-green-600 hover:text-green-700 font-bold text-sm" data-target="edit">+ Flug eintragen</a>
-                        <a href="#admin" class="nav-link text-purple-600 hover:text-purple-700 font-bold text-sm" data-target="admin">Admin</a>
+                        <a href="#edit" class="nav-link text-green-600 hover:text-green-700 font-bold text-sm">+ Flug eintragen</a>
+                        <a href="#admin" class="nav-link text-purple-600 hover:text-purple-700 font-bold text-sm">Admin</a>
                         <button id="navLogoutBtn" class="text-gray-500 hover:text-red-600 font-medium text-sm">Abmelden</button>
                     </div>
 
                     <!-- Login Button -->
-                    <a href="#login" id="navLoginBtn" class="nav-link bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-md transition-colors text-sm" data-target="login">Mitglied Login</a>
+                    <a href="#login" id="navLoginBtn" class="nav-link bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-md transition-colors text-sm">Mitglied Login</a>
                 </div>
 
                 <!-- Mobile Burger Button -->
@@ -78,7 +79,8 @@
         <div id="mobileMenu" class="hidden flex-col md:hidden bg-white absolute w-full left-0 top-[64px] shadow-xl border-t border-gray-100 z-[9999]">
             <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Start</a>
             <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Flugkarte</a>
-            <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50" onclick="alert('Crew Seite folgt noch!')">Crew</a>
+            <a href="#crew" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Crew</a>
+            <a href="#flieger" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Der Flieger</a>
             
             <div id="mobileAuthMenu" class="hidden flex-col bg-gray-50">
                 <a href="#edit" class="px-6 py-4 text-green-600 font-bold border-b border-gray-100">+ Flug eintragen</a>
@@ -93,10 +95,10 @@
     <!-- ========================================== -->
     <!-- VIEW: STARTSEITE (#home)                   -->
     <!-- ========================================== -->
-    <section id="view-home" class="view-section active">
+    <section id="view-home" class="view-section active overflow-y-auto">
         <header class="relative bg-gray-900 h-[60vh] md:h-[70vh] overflow-hidden flex items-center justify-center shrink-0">
             <div id="slideshow" class="absolute inset-0 w-full h-full">
-                <img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg" class="slide active">
+                <img id="img-slide-fallback" src="" class="slide active">
                 <div class="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
             </div>
             <div class="relative z-10 text-center px-4 w-full">
@@ -117,18 +119,83 @@
                 <p class="text-lg text-gray-600 leading-relaxed">Hier noch mehr Text</p>
             </section>
             <section class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
-                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773184803/map-fly-cardina%C3%B6_ezuvvz.png" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Flugkarte</h3><p class="text-gray-600 mb-4">Verfolge unsere letzten Flüge interaktiv.</p><a href="#map" class="text-blue-600 font-semibold">Zur Karte &rarr;</a></div></div>
-                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Unsere Crew</h3><p class="text-gray-600 mb-4">Lerne unsere Piloten kennen.</p><a href="#" class="text-blue-600 font-semibold">Team ansehen &rarr;</a></div></div>
-                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img src="https://res.cloudinary.com/drpuhsspx/image/upload/v1773185095/54072_1634383168_u1dqnf.jpg" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Der Flieger</h3><p class="text-gray-600 mb-4">Entdecke unsere Cessna 177</p><a href="#" class="text-blue-600 font-semibold">Flieger entdecken &rarr;</a></div></div>
+                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img id="img-card-map" src="" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Flugkarte</h3><p class="text-gray-600 mb-4">Verfolge unsere letzten Flüge interaktiv.</p><a href="#map" class="text-blue-600 font-semibold">Zur Karte &rarr;</a></div></div>
+                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img id="img-card-crew" src="" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Unsere Crew</h3><p class="text-gray-600 mb-4">Lerne unsere Piloten kennen.</p><a href="#crew" class="text-blue-600 font-semibold">Team ansehen &rarr;</a></div></div>
+                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img id="img-card-flieger" src="" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Der Flieger</h3><p class="text-gray-600 mb-4">Entdecke unsere Cessna 177</p><a href="#flieger" class="text-blue-600 font-semibold">Flieger entdecken &rarr;</a></div></div>
             </section>
         </main>
         <footer class="bg-gray-900 text-gray-400 py-12 mt-auto shrink-0 w-full"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
     </section>
 
     <!-- ========================================== -->
+    <!-- VIEW: CREW (MINIMALISTISCH) (#crew)        -->
+    <!-- ========================================== -->
+    <section id="view-crew" class="view-section relative bg-gray-900" style="height: calc(100dvh - 64px);">
+        <!-- Das Hintergrundbild wird über JS geladen (siehe BILDER_KONFIGURATION ganz unten) -->
+        <div id="bg-crew" class="absolute inset-0 bg-cover bg-center opacity-40 z-0"></div>
+        <div class="relative z-10 flex flex-col items-center justify-center h-full px-4 w-full">
+            
+            <!-- Minimalistische Kontakt-Box -->
+            <div class="bg-white/10 backdrop-blur-md border border-white/20 p-8 md:p-12 rounded-3xl shadow-2xl text-center space-y-8 max-w-lg w-full">
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-4 tracking-widest uppercase">Kontakt</h2>
+                
+                <a href="mailto:info@fly-cardinal.de" class="block text-xl md:text-2xl text-white hover:text-blue-300 transition-colors font-light">
+                    [E-Mail 1 einfügen]
+                </a>
+                
+                <div class="w-16 h-px bg-white/30 mx-auto"></div>
+                
+                <a href="mailto:vorstand@fly-cardinal.de" class="block text-xl md:text-2xl text-white hover:text-blue-300 transition-colors font-light">
+                    [E-Mail 2 einfügen]
+                </a>
+                
+                <div class="w-16 h-px bg-white/30 mx-auto"></div>
+                
+                <a href="mailto:flugbetrieb@fly-cardinal.de" class="block text-xl md:text-2xl text-white hover:text-blue-300 transition-colors font-light">
+                    [E-Mail 3 einfügen]
+                </a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW: DER FLIEGER (#flieger)               -->
+    <!-- ========================================== -->
+    <section id="view-flieger" class="view-section bg-white overflow-y-auto" style="height: calc(100dvh - 64px);">
+        <!-- Hero Image -->
+        <div class="w-full h-64 md:h-96 relative shrink-0">
+            <img id="img-flieger-hero" src="" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+            <h1 class="absolute bottom-6 left-6 md:left-12 text-4xl md:text-5xl font-bold text-white drop-shadow-lg">Cessna 177 Cardinal</h1>
+        </div>
+        
+        <!-- Content -->
+        <div class="max-w-5xl mx-auto px-4 py-12 space-y-12">
+            <div class="text-lg text-gray-700 leading-relaxed bg-gray-50 p-6 md:p-10 rounded-2xl border border-gray-100 shadow-sm">
+                <p class="mb-4">
+                    [Hier kannst du den Text über euer Flugzeug einfügen. Erzähle etwas über die Geschichte, die Ausstattung, die Flugeigenschaften oder warum die Cardinal so ein besonderes Flugzeug ist.]
+                </p>
+                <p>
+                    [Zweiter Absatz für weitere technische Daten, Avionik oder was auch immer euch wichtig ist.]
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="rounded-2xl shadow-md overflow-hidden h-64 border border-gray-100">
+                    <img id="img-flieger-d1" src="" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                </div>
+                <div class="rounded-2xl shadow-md overflow-hidden h-64 border border-gray-100">
+                    <img id="img-flieger-d2" src="" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                </div>
+            </div>
+        </div>
+        <footer class="bg-gray-900 text-gray-400 py-12 mt-auto shrink-0 w-full"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
+    </section>
+
+    <!-- ========================================== -->
     <!-- VIEW: ÖFFENTLICHE KARTE (#map)             -->
     <!-- ========================================== -->
-    <!-- FIX: Feste Höhe, damit die Karte den gesamten Platz ausfüllt -->
     <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden w-full block" style="height: calc(100dvh - 64px);">
         <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
         
@@ -185,8 +252,7 @@
                 <div id="saveFlightStatus" class="text-center text-sm font-semibold h-5 mt-2"></div>
             </div>
         </div>
-        <!-- Die Map im Editor füllt auf dem Desktop den Rest und auf dem Handy den unteren Bereich -->
-        <div class="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[400px] relative w-full z-0">
+        <div class="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[300px] md:min-h-[400px] relative w-full z-0">
             <div id="editMap" class="w-full h-full absolute inset-0 z-0"></div>
         </div>
     </section>
@@ -199,7 +265,6 @@
             <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-2 sm:mt-4">
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">fly-cardinal Admin Dashboard</h2>
                 
-                <!-- BILDER UPLOAD -->
                 <div class="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
                     <h3 class="font-bold text-gray-700 mb-2">Slideshow Bilder hochladen</h3>
                     <input type="file" id="imageUpload" accept="image/*" class="hidden">
@@ -209,13 +274,11 @@
                     <div id="uploadStatus" class="mt-3 font-semibold text-sm h-5"></div>
                 </div>
 
-                <!-- BILDER GALERIE -->
                 <h3 class="font-bold text-gray-700 mb-3">Aktuelle Bilder in der Slideshow:</h3>
                 <div id="imagesGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-12"></div>
                 
                 <hr class="border-gray-200 mb-8">
 
-                <!-- MASSEN-IMPORT FÜR FLÜGE -->
                 <div class="bg-blue-50 p-4 sm:p-6 rounded-xl border border-blue-200">
                     <h3 class="font-bold text-blue-900 mb-2 text-lg sm:text-xl">CSV Massen-Import (Flüge)</h3>
                     <p class="text-xs sm:text-sm text-blue-700 mb-4">Format: <code class="bg-blue-100 px-1 rounded break-all">Datum,Wer ist geflogen,Start,Landung,Start,Landung</code></p>
@@ -232,6 +295,50 @@
     <!-- ========================================== -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
+
+        // =========================================================================
+        // ZENTRALER ORT FÜR ALLE BILDER (HIER KANNST DU ALLES ANPASSEN!)
+        // =========================================================================
+        const BILDER_KONFIGURATION = {
+            // Logo in der Navigation oben links
+            logo: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773184165/Cardinal_Bird_sntrqv.png",
+            
+            // Wenn in der Datenbank (Admin-Bereich) noch keine Slideshow-Bilder sind, wird dieses gezeigt
+            slideshowFallback: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg",
+            
+            // Die 3 kleinen Info-Bilder auf der Startseite (Home) unten
+            cardMap: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773184803/map-fly-cardina%C3%B6_ezuvvz.png",
+            cardCrew: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=800&auto=format&fit=crop",
+            cardFlieger: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773185095/54072_1634383168_u1dqnf.jpg",
+            
+            // Das große Hintergrundbild auf der neuen Crew-Seite (Aktuell Platzhalter: Himmel)
+            crewHintergrund: "https://images.unsplash.com/photo-1495584816685-4bdbf1b5057e?q=80&w=2000&auto=format&fit=crop",
+            
+            // Die Bilder auf der neuen Flieger-Seite (Aktuell Platzhalter: Cessna)
+            fliegerHero: "https://images.unsplash.com/photo-1583072046894-370cc3672013?q=80&w=2000&auto=format&fit=crop", // Großes Bild oben
+            fliegerDetail1: "https://images.unsplash.com/photo-1605367622831-29cf63b2f9f1?q=80&w=800&auto=format&fit=crop", // Kleines Bild links
+            fliegerDetail2: "https://images.unsplash.com/photo-1540962351504-03099e0a754b?q=80&w=800&auto=format&fit=crop"  // Kleines Bild rechts
+        };
+
+        // Bilder sofort beim Start der Seite laden
+        function ladeAlleBilder() {
+            document.getElementById('img-logo').src = BILDER_KONFIGURATION.logo;
+            document.getElementById('img-slide-fallback').src = BILDER_KONFIGURATION.slideshowFallback;
+            document.getElementById('img-card-map').src = BILDER_KONFIGURATION.cardMap;
+            document.getElementById('img-card-crew').src = BILDER_KONFIGURATION.cardCrew;
+            document.getElementById('img-card-flieger').src = BILDER_KONFIGURATION.cardFlieger;
+            
+            // Crew Background (wird als CSS backgroundImage gesetzt)
+            document.getElementById('bg-crew').style.backgroundImage = `url('${BILDER_KONFIGURATION.crewHintergrund}')`;
+            
+            document.getElementById('img-flieger-hero').src = BILDER_KONFIGURATION.fliegerHero;
+            document.getElementById('img-flieger-d1').src = BILDER_KONFIGURATION.fliegerDetail1;
+            document.getElementById('img-flieger-d2').src = BILDER_KONFIGURATION.fliegerDetail2;
+        }
+        ladeAlleBilder();
+        // =========================================================================
+
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs, setDoc, getDoc, increment, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -267,15 +374,11 @@
             if (['#edit', '#admin'].includes(hash) && !currentUser) { intendedRoute = hash; hash = '#login'; }
             
             mobileMenu.classList.add('hidden'); mobileMenu.classList.remove('flex');
-            
-            // Alle Sektionen bereinigen
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             
-            // Ziel aktivieren
             const target = document.getElementById(`view-${hash.substring(1)}`);
             (target ? target : document.getElementById('view-home')).classList.add('active');
             
-            // FIX: Mehrfaches Invalidieren für Handys, da sich der Viewport leicht ändert
             if (hash === '#map') {
                 initPublicMap();
                 setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 50);
