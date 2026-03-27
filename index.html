@@ -1,690 +1,730 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { initializeApp } from 'firebase/app';
-import { 
-    getAuth, signInWithEmailAndPassword, signInWithPopup, 
-    GoogleAuthProvider, signOut, onAuthStateChanged, 
-    signInAnonymously 
-} from 'firebase/auth';
-import { 
-    getFirestore, collection, addDoc, onSnapshot, 
-    deleteDoc, doc, getDocs, setDoc, getDoc, increment, 
-    query, where 
-} from 'firebase/firestore';
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>fly-cardinal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* DVH behebt den Mobile-Safari Bug mit der URL-Leiste */
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; overflow-x: hidden; margin: 0; padding: 0; }
+        
+        /* FIX: !important zwingt den Browser, die inaktiven Sections auszublenden */
+        .view-section:not(.active) { display: none !important; }
+        .view-section.active { display: flex; flex-direction: column; flex-grow: 1; }
 
-// --- BILDER KONFIGURATION ---
-const IMAGES = {
-    logo: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773184165/Cardinal_Bird_sntrqv.png",
-    fallback: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg",
-    map: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773184803/map-fly-cardina%C3%B6_ezuvvz.png",
-    crew: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508977/crew_cap_gmo167.jpg",
-    flieger: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773185095/54072_1634383168_u1dqnf.jpg",
-    crewBg: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508979/uli_veste_fjhzui.png",
-    fliegerHero: "https://images.unsplash.com/photo-1583072046894-370cc3672013?q=80&w=2000&auto=format&fit=crop",
-    fliegerD1: "https://images.unsplash.com/photo-1605367622831-29cf63b2f9f1?q=80&w=800&auto=format&fit=crop",
-    fliegerD2: "https://images.unsplash.com/photo-1540962351504-03099e0a754b?q=80&w=800&auto=format&fit=crop"
-};
+        /* Slideshow Animation */
+        .slide { transition: opacity 1s ease-in-out; opacity: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .slide.active { opacity: 1; position: relative; }
 
-// --- FIREBASE INITIALIZATION ---
-// Sandbox-Erkennung für die korrekte Ausführung im Browser-Editor
-const isSandbox = typeof __firebase_config !== 'undefined';
-const firebaseConfig = isSandbox ? JSON.parse(__firebase_config) : {
-    apiKey: "AIzaSyA9ONDoCc-PahLWVkvECTZz1E9U8dpjgPc",
-    authDomain: "flycardinal-a3635.firebaseapp.com",
-    projectId: "flycardinal-a3635",
-    storageBucket: "flycardinal-a3635.firebasestorage.app",
-    messagingSenderId: "47686059980",
-    appId: "1:47686059980:web:39711435422c3447ecbf69"
-};
+        /* Custom Map Pins */
+        .custom-pin { background-color: #3b82f6; color: white; border-radius: 50%; text-align: center; line-height: 32px; font-weight: bold; font-size: 14px; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .leaflet-popup { display: none !important; } 
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+        /* Input Fields Editor */
+        .input-field { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; outline: none; transition: border-color 0.2s; }
+        .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        .label { display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.25rem; }
+    </style>
+</head>
+<body class="flex flex-col min-h-[100dvh]">
 
-// Pfad-Helfer für Sandbox-Compliance
-const getColPath = (base) => {
-    if (isSandbox && typeof __app_id !== 'undefined') {
-        return `artifacts/${__app_id}/public/data/${base}`;
-    }
-    return base;
-};
-
-// --- HILFSFUNKTIONEN ---
-const injectLeaflet = () => {
-    if (!document.getElementById('leaflet-css')) {
-        const link = document.createElement('link');
-        link.id = 'leaflet-css'; link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
-    }
-    if (!document.getElementById('leaflet-js')) {
-        return new Promise((resolve) => {
-            const script = document.createElement('script');
-            script.id = 'leaflet-js'; script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.onload = resolve;
-            document.head.appendChild(script);
-        });
-    }
-    return Promise.resolve();
-};
-
-const fetchOverpass = async (icao) => {
-    try {
-        const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(`[out:json];(node["icao"="${icao}"];way["icao"="${icao}"];relation["icao"="${icao}"];);out center;`)}`);
-        const data = await res.json();
-        if(data.elements.length > 0) { 
-            const el = data.elements[0]; 
-            return { lat: el.lat || el.center.lat, lon: el.lon || el.center.lon, name: el.tags.name }; 
-        }
-    } catch(e) { console.warn("Overpass Fehler", e); } 
-    return null;
-};
-
-// ==========================================
-// KOMPONENTEN
-// ==========================================
-
-const Navbar = ({ user, currentHash, setHash }) => {
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-    const nav = (hash) => {
-        setHash(hash);
-        setMobileMenuOpen(false);
-    };
-
-    return (
-        <nav className="bg-white shadow-md sticky top-0 z-[10000] w-full h-[64px]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
-                    <div className="flex items-center cursor-pointer" onClick={() => nav('home')}>
-                        <img src={IMAGES.logo} alt="Logo" className="h-10 w-auto mr-2" />
-                        <span className="font-bold text-xl text-gray-900">fly-cardinal</span>
-                    </div>
+    <!-- GEMEINSAME NAVIGATION -->
+    <nav class="bg-white shadow-md sticky top-0 z-[10000] w-full h-[64px]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="#home" class="flex-shrink-0 flex items-center gap-2">
+                        <img id="img-logo" src="" alt="fly-cardinal Logo" class="h-10 w-auto">
+                        <span class="font-bold text-xl text-gray-900">fly-cardinal</span>
+                    </a>
+                </div>
+                
+                <!-- Desktop Menü -->
+                <div class="hidden md:flex md:items-center md:space-x-6 lg:space-x-8">
+                    <a href="#home" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors">Start</a>
+                    <a href="#map" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors">Flugkarte</a>
+                    <a href="#crew" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors">Crew</a>
+                    <a href="#flieger" class="nav-link text-gray-600 hover:text-blue-600 font-medium transition-colors">Der Flieger</a>
                     
-                    <div className="hidden md:flex md:items-center md:space-x-6 lg:space-x-8">
-                        {['home', 'map', 'crew', 'flieger'].map(v => (
-                            <button key={v} onClick={() => nav(v)} className={`font-medium transition-colors ${currentHash === v ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'}`}>
-                                {v.charAt(0).toUpperCase() + v.slice(1)}
-                            </button>
-                        ))}
-                        
-                        {user ? (
-                            <div className="flex items-center space-x-4 border-l pl-4 border-gray-200">
-                                <button onClick={() => nav('edit')} className="text-green-600 hover:text-green-700 font-bold text-sm">+ Flug</button>
-                                <button onClick={() => nav('admin')} className="text-purple-600 hover:text-purple-700 font-bold text-sm">Admin</button>
-                                <button onClick={() => signOut(auth)} className="text-gray-500 hover:text-red-600 font-medium text-sm">Logout</button>
-                            </div>
-                        ) : (
-                            <button onClick={() => nav('login')} className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-md text-sm">Login</button>
-                        )}
+                    <!-- Admin Links -->
+                    <div id="authMenu" class="hidden items-center space-x-4 border-l pl-4 border-gray-200">
+                        <a href="#edit" class="nav-link text-green-600 hover:text-green-700 font-bold text-sm">+ Flug eintragen</a>
+                        <a href="#admin" class="nav-link text-purple-600 hover:text-purple-700 font-bold text-sm">Admin</a>
+                        <button id="navLogoutBtn" class="text-gray-500 hover:text-red-600 font-medium text-sm">Abmelden</button>
                     </div>
 
-                    <div className="flex items-center md:hidden">
-                        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-gray-500 hover:text-gray-800 p-2">
-                            <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}/>
-                            </svg>
-                        </button>
-                    </div>
+                    <!-- Login Button -->
+                    <a href="#login" id="navLoginBtn" class="nav-link bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-md transition-colors text-sm">Mitglied Login</a>
                 </div>
-            </div>
 
-            {mobileMenuOpen && (
-                <div className="flex flex-col md:hidden bg-white absolute w-full left-0 top-[64px] shadow-xl border-t border-gray-100 z-[9999]">
-                    {['home', 'map', 'crew', 'flieger'].map(v => (
-                        <button key={v} onClick={() => nav(v)} className="text-left px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">
-                            {v.charAt(0).toUpperCase() + v.slice(1)}
-                        </button>
-                    ))}
-                    {user ? (
-                        <div className="flex flex-col bg-gray-50">
-                            <button onClick={() => nav('edit')} className="text-left px-6 py-4 text-green-600 font-bold border-b border-gray-100">+ Flug eintragen</button>
-                            <button onClick={() => nav('admin')} className="text-left px-6 py-4 text-purple-600 font-bold border-b border-gray-100">Admin</button>
-                            <button onClick={() => { signOut(auth); setMobileMenuOpen(false); }} className="text-left px-6 py-4 text-red-600 font-bold hover:bg-gray-100">Abmelden</button>
-                        </div>
-                    ) : (
-                        <button onClick={() => nav('login')} className="text-left px-6 py-4 text-blue-600 font-bold bg-blue-50 hover:bg-blue-100">Mitglied Login</button>
-                    )}
-                </div>
-            )}
-        </nav>
-    );
-};
-
-const HomeView = ({ setHash }) => {
-    const [images, setImages] = useState([]);
-    const [activeIndex, setActiveIndex] = useState(0);
-
-    useEffect(() => {
-        const unsub = onSnapshot(collection(db, getColPath("slideshow_images")), (snap) => {
-            const imgs = snap.docs.map(d => d.data().url);
-            setImages(imgs.length > 0 ? imgs : [IMAGES.fallback]);
-        });
-        return () => unsub();
-    }, []);
-
-    useEffect(() => {
-        if (images.length <= 1) return;
-        const interval = setInterval(() => {
-            setActiveIndex((prev) => (prev + 1) % images.length);
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [images]);
-
-    return (
-        <main className="flex flex-col flex-grow w-full overflow-y-auto">
-            <header className="relative bg-gray-900 h-[60vh] md:h-[70vh] overflow-hidden flex items-center justify-center shrink-0">
-                <div className="absolute inset-0 w-full h-full">
-                    {images.map((url, i) => (
-                        <img key={i} src={url} className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 ${i === activeIndex ? 'opacity-100' : 'opacity-0'}`} alt="Slide" />
-                    ))}
-                    <div className="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
-                </div>
-                <div className="relative z-10 text-center px-4 w-full">
-                    <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-lg">fly-cardinal</h1>
-                    <button onClick={() => setHash('map')} className="mt-8 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 inline-flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        Interaktive Karte
+                <!-- Mobile Burger Button -->
+                <div class="flex items-center md:hidden">
+                    <button id="mobileMenuBtn" class="text-gray-500 hover:text-gray-800 focus:outline-none p-2">
+                        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
                     </button>
                 </div>
-            </header>
-            <div className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 w-full">
-                <section className="text-center max-w-3xl mx-auto"><h2 className="text-3xl font-bold text-gray-900 mb-6">About</h2></section>
-                <section className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
-                    {[
-                        { img: IMAGES.map, title: 'Flugkarte', link: 'map', text: 'Zur Karte' },
-                        { img: IMAGES.crew, title: 'Crew', link: 'crew', text: 'Team ansehen' },
-                        { img: IMAGES.flieger, title: 'Der Flieger', link: 'flieger', text: 'Flieger entdecken' }
-                    ].map(card => (
-                        <div key={card.title} className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
-                            <div className="h-48 bg-gray-200 relative"><img src={card.img} className="w-full h-full object-cover" alt={card.title} /></div>
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold mb-2">{card.title}</h3>
-                                <button onClick={() => setHash(card.link)} className="text-blue-600 font-semibold">{card.text} &rarr;</button>
-                            </div>
-                        </div>
-                    ))}
-                </section>
             </div>
+        </div>
+
+        <!-- Mobile Menü Container -->
+        <div id="mobileMenu" class="hidden flex-col md:hidden bg-white absolute w-full left-0 top-[64px] shadow-xl border-t border-gray-100 z-[9999]">
+            <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Start</a>
+            <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Flugkarte</a>
+            <a href="#crew" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Crew</a>
+            <a href="#flieger" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-50 hover:bg-gray-50">Der Flieger</a>
+            
+            <div id="mobileAuthMenu" class="hidden flex-col bg-gray-50">
+                <a href="#edit" class="px-6 py-4 text-green-600 font-bold border-b border-gray-100">+ Flug eintragen</a>
+                <a href="#admin" class="px-6 py-4 text-purple-600 font-bold border-b border-gray-100">Admin Dashboard</a>
+                <button id="mobileNavLogoutBtn" class="text-left px-6 py-4 text-red-600 font-bold hover:bg-gray-100">Abmelden</button>
+            </div>
+
+            <a href="#login" id="mobileNavLoginBtn" class="px-6 py-4 text-blue-600 font-bold bg-blue-50 hover:bg-blue-100">Mitglied Login</a>
+        </div>
+    </nav>
+
+    <!-- ========================================== -->
+    <!-- VIEW: STARTSEITE (#home)                   -->
+    <!-- ========================================== -->
+    <section id="view-home" class="view-section active overflow-y-auto">
+        <header class="relative bg-gray-900 h-[60vh] md:h-[70vh] overflow-hidden flex items-center justify-center shrink-0">
+            <div id="slideshow" class="absolute inset-0 w-full h-full">
+                <img id="img-slide-fallback" src="" class="slide active">
+                <div class="absolute inset-0 bg-black bg-opacity-40 z-0"></div>
+            </div>
+            <div class="relative z-10 text-center px-4 w-full">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-lg">fly-cardinal</h1>
+                <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <a href="#map" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Interaktive Karte
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12 w-full">
+            <section class="text-center max-w-3xl mx-auto">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">About</h2>
+            </section>
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
+                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img id="img-card-map" src="" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Flugkarte</h3><a href="#map" class="text-blue-600 font-semibold">Zur Karte &rarr;</a></div></div>
+                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img id="img-card-crew" src="" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Crew</h3><a href="#crew" class="text-blue-600 font-semibold">Team ansehen &rarr;</a></div></div>
+                <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100"><div class="h-48 bg-gray-200 relative"><img id="img-card-flieger" src="" class="w-full h-full object-cover"></div><div class="p-6"><h3 class="text-xl font-bold mb-2">Der Flieger</h3><a href="#flieger" class="text-blue-600 font-semibold">Flieger entdecken &rarr;</a></div></div>
+            </section>
         </main>
-    );
-};
+        <footer class="bg-gray-900 text-gray-400 py-12 mt-auto shrink-0 w-full"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
+    </section>
 
-const CrewView = () => (
-    <div className="relative flex-grow" style={{ minHeight: 'calc(100dvh - 64px)' }}>
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${IMAGES.crewBg})` }}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div>
-        <div className="relative z-10 flex flex-col items-center justify-end h-full px-4 pb-12 w-full absolute inset-0">
-            <div className="text-center space-y-6 w-full flex flex-col items-center mt-auto">
-                <img src={IMAGES.logo} alt="Logo" className="h-16 md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300" />
-                <h2 className="text-sm md:text-base font-bold text-white/70 tracking-[0.3em] uppercase drop-shadow-md">Kontakt</h2>
-                <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 w-full">
-                    {['cs', 'fs', 'um'].map((p, i) => (
-                        <React.Fragment key={p}>
-                            <a href={`mailto:${p}@fly-cardinal.de`} className="text-lg md:text-xl font-light text-white hover:text-blue-300 drop-shadow-lg">{p}@fly-cardinal.de</a>
-                            {i < 2 && <><div className="hidden md:block w-1.5 h-1.5 rounded-full bg-white/40"></div><div className="md:hidden w-8 h-px bg-white/20"></div></>}
-                        </React.Fragment>
-                    ))}
+    <!-- ========================================== -->
+    <!-- VIEW: CREW (MINIMALISTISCH) (#crew)        -->
+    <!-- ========================================== -->
+    <section id="view-crew" class="view-section relative" style="height: calc(100dvh - 64px);">
+        <!-- Das Hintergrundbild wird über JS geladen (volle Deckkraft) -->
+        <div id="bg-crew" class="absolute inset-0 bg-cover bg-center z-0"></div>
+        
+        <!-- Sanfter Verlauf von unten, damit die Schrift immer lesbar bleibt, ohne das Bild in der Mitte zu verdecken -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-0"></div>
+        
+        <!-- Inhalte ganz unten platziert (justify-end) -->
+        <div class="relative z-10 flex flex-col items-center justify-end h-full px-4 pb-12 w-full">
+            
+            <div class="text-center space-y-6 w-full flex flex-col items-center">
+                
+                <!-- Logo Integration (mit leichtem Schatten) -->
+                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="h-16 md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+                
+                <h2 class="text-sm md:text-base font-bold text-white/70 tracking-[0.3em] uppercase drop-shadow-md">Kontakt</h2>
+                
+                <!-- Adressen nebeneinander auf großen Bildschirmen, untereinander auf Handys -->
+                <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 w-full">
+                    <a href="mailto:cs@fly-cardinal.de" class="text-lg md:text-xl font-light text-white hover:text-blue-300 transition-colors drop-shadow-lg">
+                        cs@fly-cardinal.de
+                    </a>
+                    
+                    <div class="hidden md:block w-1.5 h-1.5 rounded-full bg-white/40"></div>
+                    <div class="md:hidden w-8 h-px bg-white/20"></div>
+                    
+                    <a href="mailto:fs@fly-cardinal.de" class="text-lg md:text-xl font-light text-white hover:text-blue-300 transition-colors drop-shadow-lg">
+                        fs@fly-cardinal.de
+                    </a>
+                    
+                    <div class="hidden md:block w-1.5 h-1.5 rounded-full bg-white/40"></div>
+                    <div class="md:hidden w-8 h-px bg-white/20"></div>
+                    
+                    <a href="mailto:um@fly-cardinal.de" class="text-lg md:text-xl font-light text-white hover:text-blue-300 transition-colors drop-shadow-lg">
+                        um@fly-cardinal.de
+                    </a>
                 </div>
             </div>
-        </div>
-    </div>
-);
 
-const FliegerView = () => (
-    <div className="bg-white overflow-y-auto flex-grow" style={{ height: 'calc(100dvh - 64px)' }}>
-        <div className="w-full h-64 md:h-96 relative shrink-0">
-            <img src={IMAGES.fliegerHero} className="w-full h-full object-cover" alt="Hero" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-            <h1 className="absolute bottom-6 left-6 md:left-12 text-4xl md:text-5xl font-bold text-white drop-shadow-lg">Cessna 177 Cardinal <span className="text-2xl md:text-3xl text-blue-300 font-medium block mt-2">D-EJCO</span></h1>
         </div>
-        <div className="max-w-5xl mx-auto px-4 py-12 space-y-12">
-            <div className="flex flex-col lg:flex-row gap-8">
-                <div className="lg:w-2/3 text-lg text-gray-700 leading-relaxed bg-gray-50 p-6 md:p-10 rounded-2xl border border-gray-100 shadow-sm">
-                    <p className="mb-4">Die Cessna 177 „Cardinal“ ist ein ganz besonderes Flugzeug in der Cessna-Familie. Entworfen in den späten 1960er Jahren, besticht sie durch ihr elegantes, modernes Design.</p>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW: DER FLIEGER (#flieger)               -->
+    <!-- ========================================== -->
+    <section id="view-flieger" class="view-section bg-white overflow-y-auto" style="height: calc(100dvh - 64px);">
+        <!-- Hero Image -->
+        <div class="w-full h-64 md:h-96 relative shrink-0">
+            <img id="img-flieger-hero" src="" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+            <h1 class="absolute bottom-6 left-6 md:left-12 text-4xl md:text-5xl font-bold text-white drop-shadow-lg">Cessna 177 Cardinal <span class="text-2xl md:text-3xl text-blue-300 font-medium block mt-2">D-EJCO</span></h1>
+        </div>
+        
+        <!-- Content -->
+        <div class="max-w-5xl mx-auto px-4 py-12 space-y-12">
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Text-Bereich -->
+                <div class="lg:w-2/3 text-lg text-gray-700 leading-relaxed bg-gray-50 p-6 md:p-10 rounded-2xl border border-gray-100 shadow-sm">
+                    <p class="mb-4">
+                        Die Cessna 177 „Cardinal“ ist ein ganz besonderes Flugzeug in der Cessna-Familie. Entworfen in den späten 1960er Jahren, besticht sie durch ihr elegantes, modernes Design. Das auffälligste Merkmal: Das Fehlen der ansonsten typischen Flügelstreben (freitragender Cantilever-Flügel). Das sorgt nicht nur für eine schnittigere Optik, sondern vor allem für eine unvergleichliche, ungestörte Rundumsicht aus dem Cockpit.
+                    </p>
+                    <p>
+                        Unsere <strong>D-EJCO</strong> bietet Piloten und Passagieren einen ungewöhnlich geräumigen Innenraum. Durch die im Vergleich zur Cessna 172 weiter hinten positionierten Tragflächen und die großen, weit öffnenden Türen ist der Einstieg deutlich bequemer. Ob für ausgedehnte Reiseflüge oder entspannte Runden über die Heimat – die Cardinal ist ein fantastischer Tourer, der aerodynamische Eleganz mit hohem Flugkomfort verbindet.
+                    </p>
                 </div>
-                <div className="lg:w-1/3 bg-blue-50 p-6 md:p-8 rounded-2xl border border-blue-100 shadow-sm flex flex-col justify-center">
-                    <h3 className="text-xl font-bold text-blue-900 mb-6 border-b border-blue-200 pb-2">Steckbrief</h3>
-                    <ul className="space-y-4 text-blue-800">
-                        <li className="flex justify-between items-center"><span className="font-semibold">Typ:</span><span>Cessna 177</span></li>
-                        <li className="flex justify-between items-center"><span className="font-semibold">Kennung:</span><span className="font-mono bg-blue-200 px-2 py-1 rounded">D-EJCO</span></li>
+                
+                <!-- Steckbrief Box -->
+                <div class="lg:w-1/3 bg-blue-50 p-6 md:p-8 rounded-2xl border border-blue-100 shadow-sm flex flex-col justify-center">
+                    <h3 class="text-xl font-bold text-blue-900 mb-6 border-b border-blue-200 pb-2">Steckbrief</h3>
+                    <ul class="space-y-4 text-blue-800">
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">Typ:</span>
+                            <span class="text-right">Cessna 177</span>
+                        </li>
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">Kennung:</span>
+                            <span class="text-right font-mono bg-blue-200 px-2 py-1 rounded">D-EJCO</span>
+                        </li>
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">Sitzplätze:</span>
+                            <span class="text-right">1 Pilot + 3 Passagiere</span>
+                        </li>
+                        <li class="flex justify-between items-center">
+                            <span class="font-semibold">Besonderheit:</span>
+                            <span class="text-right">Freitragende Flügel</span>
+                        </li>
                     </ul>
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="rounded-2xl shadow-md overflow-hidden h-64 border border-gray-100"><img src={IMAGES.fliegerD1} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" alt="Detail 1"/></div>
-                <div className="rounded-2xl shadow-md overflow-hidden h-64 border border-gray-100"><img src={IMAGES.fliegerD2} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" alt="Detail 2"/></div>
+            
+            <!-- Detail-Bilder -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="rounded-2xl shadow-md overflow-hidden h-64 border border-gray-100">
+                    <img id="img-flieger-d1" src="" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                </div>
+                <div class="rounded-2xl shadow-md overflow-hidden h-64 border border-gray-100">
+                    <img id="img-flieger-d2" src="" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                </div>
             </div>
         </div>
-    </div>
-);
+        <footer class="bg-gray-900 text-gray-400 py-12 mt-auto shrink-0 w-full"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
+    </section>
 
-const MapView = ({ user, isEditMode = false }) => {
-    const mapRef = useRef(null);
-    const mapInstance = useRef(null);
-    const markersRef = useRef([]);
-    const linesRef = useRef([]);
-    const activeMarkerRef = useRef(null);
-    
-    const [locations, setLocations] = useState({});
-    const [sheetData, setSheetData] = useState(null); // {icao, name, lat, lon}
-    const [flights, setFlights] = useState([]);
-    
-    const [form, setForm] = useState({ fromIcao: '', toIcao: '', date: '', startTime: '', endTime: '', notes: '' });
-    const [formStatus, setFormStatus] = useState({ msg: '', isError: false });
-    const [validations, setValidations] = useState({ from: null, to: null });
+    <!-- ========================================== -->
+    <!-- VIEW: ÖFFENTLICHE KARTE (#map)             -->
+    <!-- ========================================== -->
+    <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden w-full block" style="height: calc(100dvh - 64px);">
+        <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
+        
+        <div id="bottomSheet" class="absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[10] max-h-[85vh] flex flex-col">
+            <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center sticky top-0 bg-white rounded-t-3xl gap-2">
+                <div><h2 id="sheetTitle" class="text-lg sm:text-xl font-bold text-gray-800">Flughafen</h2><p id="sheetSubtitle" class="text-xs sm:text-sm text-gray-500">Lade...</p></div>
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <select id="sortSelect" class="bg-gray-100 text-gray-700 border-none rounded-lg px-2 py-2 text-xs sm:text-sm outline-none cursor-pointer hidden">
+                        <option value="date">Nach Datum</option>
+                        <option value="frequency">Nach Häufigkeit</option>
+                    </select>
+                    <button id="closeSheetBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">✕</button>
+                </div>
+            </div>
+            <div id="sheetContent" class="p-4 overflow-y-auto flex-grow bg-gray-50 h-[300px]"></div>
+        </div>
+    </section>
 
-    useEffect(() => {
-        let unsub = () => {};
-        injectLeaflet().then(() => {
-            if (!mapInstance.current && mapRef.current) {
-                const L = window.L;
-                mapInstance.current = L.map(mapRef.current, { zoomControl: false }).setView([50.0, 10.0], 5);
-                L.control.zoom({ position: 'topleft' }).addTo(mapInstance.current);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance.current);
+    <!-- ========================================== -->
+    <!-- VIEW: LOGIN (#login)                       -->
+    <!-- ========================================== -->
+    <section id="view-login" class="view-section items-center justify-center bg-gray-100 px-4" style="height: calc(100dvh - 64px);">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800">Mitglieds-Login</h3>
+            
+            <!-- NEU: Benutzername statt E-Mail -->
+            <input type="text" id="loginUsername" placeholder="Benutzername" class="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required>
+            <input type="password" id="loginPassword" placeholder="Passwort" class="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required>
+            
+            <button id="actionLoginBtn" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg transition-colors">Einloggen</button>
+            <div class="my-4 border-t border-gray-200 relative"><span class="absolute top-[-10px] left-1/2 transform -translate-x-1/2 bg-white px-2 text-gray-400 text-sm">oder</span></div>
+            <button id="actionGoogleBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors">Mit Google anmelden</button>
+            <div id="loginErrorMsg" class="text-red-500 mt-4 text-sm font-semibold"></div>
+        </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW: FLUG EINTRAGEN (#edit)               -->
+    <!-- ========================================== -->
+    <section id="view-edit" class="view-section p-4 flex-col md:flex-row gap-4 bg-gray-100 overflow-y-auto" style="height: calc(100dvh - 64px);">
+        <div class="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-md flex flex-col h-auto md:h-full overflow-y-auto z-10">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 shrink-0">Neuen Flug eintragen</h3>
+            <div class="space-y-4 flex-grow">
+                <div><label class="label">Start (ICAO)</label><input type="text" id="fromIcao" class="input-field uppercase" maxlength="4" required><div id="fromResult" class="text-xs mt-1 h-4"></div></div>
+                <div><label class="label">Ziel (ICAO)</label><input type="text" id="toIcao" class="input-field uppercase" maxlength="4" required><div id="toResult" class="text-xs mt-1 h-4"></div></div>
+                <div class="grid grid-cols-1 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div><label class="label">Datum</label><input type="date" id="date" class="input-field bg-white" required></div>
+                    <div class="flex gap-4">
+                        <div class="w-1/2"><label class="label">Startzeit</label><input type="time" id="startTime" class="input-field bg-white"></div>
+                        <div class="w-1/2"><label class="label">Landezeit</label><input type="time" id="endTime" class="input-field bg-white"></div>
+                    </div>
+                </div>
+                <div><label class="label">Notizen</label><textarea id="notes" rows="2" class="input-field resize-none"></textarea></div>
+            </div>
+            <div class="mt-6 shrink-0">
+                <button id="saveFlightBtn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow disabled:opacity-50">Speichern</button>
+                <div id="saveFlightStatus" class="text-center text-sm font-semibold h-5 mt-2"></div>
+            </div>
+        </div>
+        <div class="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[300px] md:min-h-[400px] relative w-full z-0">
+            <div id="editMap" class="w-full h-full absolute inset-0 z-0"></div>
+        </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- VIEW: ADMIN DASHBOARD (#admin)             -->
+    <!-- ========================================== -->
+    <section id="view-admin" class="view-section p-4 bg-gray-100 overflow-y-auto">
+        <div class="max-w-5xl mx-auto w-full">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-2 sm:mt-4">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">fly-cardinal Admin Dashboard</h2>
                 
-                mapInstance.current.on('click', () => {
-                    setSheetData(null);
-                    resetHighlights();
-                });
+                <div class="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
+                    <h3 class="font-bold text-gray-700 mb-2">Slideshow Bilder hochladen</h3>
+                    <input type="file" id="imageUpload" accept="image/*" class="hidden">
+                    <label for="imageUpload" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow inline-block mb-3">Bild auswählen</label>
+                    <p id="fileName" class="text-sm text-gray-500 mb-4 truncate w-full">Kein Bild ausgewählt</p>
+                    <button id="uploadCloudinaryBtn" class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow disabled:opacity-50" disabled>Hochladen</button>
+                    <div id="uploadStatus" class="mt-3 font-semibold text-sm h-5"></div>
+                </div>
 
-                // Lade Locations
-                unsub = onSnapshot(collection(db, getColPath("locations")), (snap) => {
-                    const locs = {};
-                    markersRef.current.forEach(m => mapInstance.current.removeLayer(m));
-                    markersRef.current = [];
+                <h3 class="font-bold text-gray-700 mb-3">Aktuelle Bilder in der Slideshow:</h3>
+                <div id="imagesGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-12"></div>
+                
+                <hr class="border-gray-200 mb-8">
 
-                    const defIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#3b82f6" class="w-8 h-8 drop-shadow-md"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [32, 32], iconAnchor: [16, 32] });
+                <div class="bg-blue-50 p-4 sm:p-6 rounded-xl border border-blue-200">
+                    <h3 class="font-bold text-blue-900 mb-2 text-lg sm:text-xl">CSV Massen-Import (Flüge)</h3>
+                    <p class="text-xs sm:text-sm text-blue-700 mb-4">Format: <code class="bg-blue-100 px-1 rounded break-all">Datum,Wer ist geflogen,Start,Landung,Start,Landung</code></p>
+                    <textarea id="importCsvData" rows="6" class="w-full p-3 border border-blue-300 rounded-lg outline-none focus:border-blue-500 mb-4 font-mono text-xs sm:text-sm" placeholder="Füge hier deine Zeilen ein..."></textarea>
+                    <button id="runImportBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-colors disabled:opacity-50">Daten analysieren & importieren</button>
+                    <div id="importStatus" class="mt-3 font-semibold text-sm"></div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                    snap.forEach((docSnap) => {
-                        const loc = docSnap.data();
-                        locs[docSnap.id] = loc;
-                        if ((loc.landings || 0) > 0 || (loc.departures || 0) > 0 || isEditMode) {
-                            const m = L.marker([loc.lat, loc.lon], { icon: defIcon }).addTo(mapInstance.current);
-                            if (!isEditMode) {
-                                m.on('click', () => handleMarkerClick(docSnap.id, loc.name, m, loc.lat, loc.lon, locs));
-                            }
-                            markersRef.current.push(m);
-                        }
-                    });
-                    setLocations(locs);
-                });
+    <!-- ========================================== -->
+    <!-- SCRIPTE & LOGIK                            -->
+    <!-- ========================================== -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+
+        // =========================================================================
+        // ZENTRALER ORT FÜR ALLE BILDER (HIER KANNST DU ALLES ANPASSEN!)
+        // =========================================================================
+        const BILDER_KONFIGURATION = {
+            // Logo in der Navigation oben links
+            logo: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773184165/Cardinal_Bird_sntrqv.png",
+            
+            // Wenn in der Datenbank (Admin-Bereich) noch keine Slideshow-Bilder sind, wird dieses gezeigt
+            slideshowFallback: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg",
+            
+            // Die 3 kleinen Info-Bilder auf der Startseite (Home) unten
+            cardMap: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773184803/map-fly-cardina%C3%B6_ezuvvz.png",
+            cardCrew: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508977/crew_cap_gmo167.jpg",
+            cardFlieger: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773185095/54072_1634383168_u1dqnf.jpg",
+            
+            // Das große Hintergrundbild auf der neuen Crew-Seite (Aktuell Platzhalter: Himmel)
+            crewHintergrund: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508979/uli_veste_fjhzui.png",
+            
+            // Die Bilder auf der neuen Flieger-Seite (Aktuell Platzhalter: Cessna)
+            fliegerHero: "https://images.unsplash.com/photo-1583072046894-370cc3672013?q=80&w=2000&auto=format&fit=crop", // Großes Bild oben
+            fliegerDetail1: "https://images.unsplash.com/photo-1605367622831-29cf63b2f9f1?q=80&w=800&auto=format&fit=crop", // Kleines Bild links
+            fliegerDetail2: "https://images.unsplash.com/photo-1540962351504-03099e0a754b?q=80&w=800&auto=format&fit=crop"  // Kleines Bild rechts
+        };
+
+        // Bilder sofort beim Start der Seite laden
+        function ladeAlleBilder() {
+            document.getElementById('img-logo').src = BILDER_KONFIGURATION.logo;
+            
+            // NEU: Logo für die Crew-Seite
+            document.getElementById('img-crew-logo').src = BILDER_KONFIGURATION.logo;
+            
+            document.getElementById('img-slide-fallback').src = BILDER_KONFIGURATION.slideshowFallback;
+            document.getElementById('img-card-map').src = BILDER_KONFIGURATION.cardMap;
+            document.getElementById('img-card-crew').src = BILDER_KONFIGURATION.cardCrew;
+            document.getElementById('img-card-flieger').src = BILDER_KONFIGURATION.cardFlieger;
+            
+            // Crew Background (wird als CSS backgroundImage gesetzt)
+            document.getElementById('bg-crew').style.backgroundImage = `url('${BILDER_KONFIGURATION.crewHintergrund}')`;
+            
+            document.getElementById('img-flieger-hero').src = BILDER_KONFIGURATION.fliegerHero;
+            document.getElementById('img-flieger-d1').src = BILDER_KONFIGURATION.fliegerDetail1;
+            document.getElementById('img-flieger-d2').src = BILDER_KONFIGURATION.fliegerDetail2;
+        }
+        ladeAlleBilder();
+        // =========================================================================
+
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, getDocs, setDoc, getDoc, increment, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9ONDoCc-PahLWVkvECTZz1E9U8dpjgPc",
+            authDomain: "flycardinal-a3635.firebaseapp.com",
+            projectId: "flycardinal-a3635",
+            storageBucket: "flycardinal-a3635.firebasestorage.app",
+            messagingSenderId: "47686059980",
+            appId: "1:47686059980:web:39711435422c3447ecbf69"
+        };
+        const CLOUDINARY_CLOUD_NAME = "drpuhsspx"; 
+        const CLOUDINARY_UPLOAD_PRESET = "lycl49dd";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let intendedRoute = '#home';
+        let publicMapInstance = null;
+        let editMapInstance = null;
+
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        mobileMenuBtn.addEventListener('click', () => { mobileMenu.classList.toggle('hidden'); mobileMenu.classList.toggle('flex'); });
+        document.querySelectorAll('#mobileMenu a, #mobileMenu button').forEach(el => { el.addEventListener('click', () => { mobileMenu.classList.add('hidden'); mobileMenu.classList.remove('flex'); }); });
+
+        // --- 1. ROUTING ---
+        function handleRouting() {
+            let hash = window.location.hash || '#home';
+            if (['#edit', '#admin'].includes(hash) && !currentUser) { intendedRoute = hash; hash = '#login'; }
+            
+            mobileMenu.classList.add('hidden'); mobileMenu.classList.remove('flex');
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            
+            const target = document.getElementById(`view-${hash.substring(1)}`);
+            (target ? target : document.getElementById('view-home')).classList.add('active');
+            
+            if (hash === '#map') {
+                initPublicMap();
+                setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 50);
+                setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 300);
+            }
+            if (hash === '#edit') {
+                initEditMap();
+                setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, 50);
+                setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, 300);
+            }
+            if (hash === '#admin') loadGallery();
+            if (hash === '#home') initSlideshow();
+        }
+        window.addEventListener('hashchange', handleRouting);
+
+        // --- 2. AUTH ---
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('authMenu').classList.replace('hidden', 'flex'); document.getElementById('navLoginBtn').classList.add('hidden');
+                document.getElementById('mobileAuthMenu').classList.replace('hidden', 'flex'); document.getElementById('mobileNavLoginBtn').classList.add('hidden');
+                if(window.location.hash === '#login' || window.location.hash === '') window.location.hash = intendedRoute !== '#login' ? intendedRoute : '#home'; else handleRouting();
+            } else {
+                document.getElementById('authMenu').classList.replace('flex', 'hidden'); document.getElementById('navLoginBtn').classList.remove('hidden');
+                document.getElementById('mobileAuthMenu').classList.replace('flex', 'hidden'); document.getElementById('mobileNavLoginBtn').classList.remove('hidden');
+                handleRouting();
             }
         });
-        return () => {
-            unsub();
-            if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
-        };
-    }, [isEditMode]);
-
-    const resetHighlights = () => {
-        const L = window.L;
-        if (!L) return;
-        if (activeMarkerRef.current) {
-            const defIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#3b82f6" class="w-8 h-8 drop-shadow-md"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [32, 32], iconAnchor: [16, 32] });
-            activeMarkerRef.current.setIcon(defIcon);
-            activeMarkerRef.current.setZIndexOffset(0);
-            activeMarkerRef.current = null;
-        }
-        linesRef.current.forEach(l => mapInstance.current.removeLayer(l));
-        linesRef.current = [];
-    };
-
-    const handleMarkerClick = async (icao, name, marker, lat, lon, currentLocs) => {
-        const L = window.L;
-        resetHighlights();
-        activeMarkerRef.current = marker;
-        const actIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#ef4444" class="w-10 h-10 drop-shadow-lg"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [40, 40], iconAnchor: [20, 40] });
-        marker.setIcon(actIcon);
-        marker.setZIndexOffset(1000);
         
-        setSheetData({ icao, name, lat, lon });
-        setFlights([]); // Clear old flights
-
-        if (user) {
+        // NEU: Logik für Anmeldung per Benutzername
+        document.getElementById('actionLoginBtn').addEventListener('click', async () => {
+            const username = document.getElementById('loginUsername').value.trim();
+            const p = document.getElementById('loginPassword').value;
+            const errMsg = document.getElementById('loginErrorMsg');
+            
+            if (!username || !p) {
+                errMsg.textContent = "Bitte Benutzername und Passwort eingeben.";
+                return;
+            }
+            
+            errMsg.textContent = "Prüfe Benutzer...";
+            
             try {
-                const [snapTo, snapFrom] = await Promise.all([
-                    getDocs(query(collection(db, getColPath("flights")), where("toIcao", "==", icao))),
-                    getDocs(query(collection(db, getColPath("flights")), where("fromIcao", "==", icao)))
-                ]);
-                const flightsMap = new Map();
-                snapTo.forEach(d => flightsMap.set(d.id, d.data()));
-                snapFrom.forEach(d => flightsMap.set(d.id, d.data()));
-                const allFlights = Array.from(flightsMap.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
-                setFlights(allFlights);
-
-                // Linien zeichnen
-                const routes = new Set();
-                allFlights.forEach(f => { if(f.fromIcao !== f.toIcao) routes.add(`${f.fromIcao}-${f.toIcao}`); });
+                // Suchen nach dem Dokument mit dem eingegebenen Benutzernamen (z.B. "cardinal")
+                const userDoc = await getDoc(doc(db, "usernames", username));
                 
+                if (userDoc.exists()) {
+                    const email = userDoc.data().email;
+                    // Mit der gefundenen E-Mail normal anmelden
+                    await signInWithEmailAndPassword(auth, email, p);
+                    errMsg.textContent = ""; 
+                } else {
+                    errMsg.textContent = "Benutzername nicht gefunden.";
+                }
+            } catch (error) {
+                console.error(error);
+                errMsg.textContent = "Login fehlgeschlagen. Datenbank-Regeln geprüft?";
+            }
+        });
+        
+        document.getElementById('actionGoogleBtn').addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()).catch(() => document.getElementById('loginErrorMsg').textContent = "Google Fehler."));
+        const logoutAction = () => { signOut(auth); window.location.hash = '#home'; };
+        document.getElementById('navLogoutBtn').addEventListener('click', logoutAction); document.getElementById('mobileNavLogoutBtn').addEventListener('click', logoutAction);
+
+        // --- 3. SLIDESHOW ---
+        let slideshowInterval;
+        async function initSlideshow() {
+            try {
+                const snap = await getDocs(collection(db, "slideshow_images"));
+                const container = document.getElementById('slideshow');
+                if (!snap.empty) {
+                    let html = '', isFirst = true;
+                    snap.forEach((doc) => { html += `<img src="${doc.data().url}" class="slide ${isFirst ? 'active' : ''}">`; isFirst = false; });
+                    container.innerHTML = html + '<div class="absolute inset-0 bg-black bg-opacity-40 z-0"></div>';
+                }
+                clearInterval(slideshowInterval);
+                const slides = container.querySelectorAll('.slide');
+                if (slides.length > 1) {
+                    let current = 0;
+                    slideshowInterval = setInterval(() => { slides[current].classList.remove('active'); current = (current + 1) % slides.length; slides[current].classList.add('active'); }, 5000);
+                }
+            } catch (e) {}
+        }
+
+        // --- 4. MAP HELPER ---
+        async function fetchOverpass(icao) {
+            try {
+                const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(`[out:json];(node["icao"="${icao}"];way["icao"="${icao}"];relation["icao"="${icao}"];);out center;`)}`);
+                const data = await res.json();
+                if(data.elements.length > 0) { const el = data.elements[0]; return { lat: el.lat || el.center.lat, lon: el.lon || el.center.lon, name: el.tags.name }; }
+            } catch(e) {} return null;
+        }
+
+        // --- 5. ÖFFENTLICHE KARTE ---
+        let publicMarkers = [], publicLines = [], publicActiveMarker = null, mapLocCache = {};
+        let currentSheetFlights = []; let currentSheetIcao = null;
+        const defIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#3b82f6" class="w-8 h-8 drop-shadow-md"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [32, 32], iconAnchor: [16, 32] });
+        const actIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#ef4444" class="w-10 h-10 drop-shadow-lg"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [40, 40], iconAnchor: [20, 40] });
+
+        function initPublicMap() {
+            if (!publicMapInstance) {
+                publicMapInstance = L.map('publicMap', { zoomControl: false }).setView([50.0, 10.0], 5); L.control.zoom({ position: 'topleft' }).addTo(publicMapInstance); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(publicMapInstance);
+                publicMapInstance.on('click', () => { document.getElementById('bottomSheet').classList.add('translate-y-full'); resetMapHighlights(); });
+                onSnapshot(collection(db, "locations"), (snapshot) => {
+                    publicMarkers.forEach(m => publicMapInstance.removeLayer(m)); publicMarkers = []; mapLocCache = {};
+                    snapshot.forEach((doc) => {
+                        const loc = doc.data(); mapLocCache[doc.id] = loc;
+                        if ((loc.landings || 0) === 0 && (loc.departures || 0) === 0) return;
+                        const m = L.marker([loc.lat, loc.lon], { icon: defIcon }).addTo(publicMapInstance);
+                        m.on('click', () => openSheet(doc.id, loc.name, m, loc.lat, loc.lon)); publicMarkers.push(m);
+                    });
+                });
+            }
+        }
+
+        function resetMapHighlights() {
+            if (publicActiveMarker) { publicActiveMarker.setIcon(defIcon); publicActiveMarker.setZIndexOffset(0); publicActiveMarker = null; }
+            publicLines.forEach(l => publicMapInstance.removeLayer(l)); publicLines = [];
+        }
+
+        async function openSheet(icao, name, marker, toLat, toLon) {
+            resetMapHighlights(); publicActiveMarker = marker; marker.setIcon(actIcon); marker.setZIndexOffset(1000);
+            currentSheetIcao = icao;
+            
+            // UI des Popups NUR aktualisieren und öffnen, wenn man eingeloggt ist
+            if (currentUser) {
+                document.getElementById('sheetTitle').textContent = `${icao} - ${name}`; 
+                document.getElementById('sheetSubtitle').textContent = `Lade...`; 
+                document.getElementById('sheetContent').innerHTML = '<div class="text-gray-500">Flüge werden geladen...</div>'; 
+                document.getElementById('bottomSheet').classList.remove('translate-y-full');
+                document.getElementById('sortSelect').classList.add('hidden'); 
+                document.getElementById('sortSelect').value = 'date';
+            }
+            
+            try {
+                const [snapTo, snapFrom] = await Promise.all([ getDocs(query(collection(db, "flights"), where("toIcao", "==", icao))), getDocs(query(collection(db, "flights"), where("fromIcao", "==", icao))) ]);
+                let flightsMap = new Map(); snapTo.forEach(d => flightsMap.set(d.id, d.data())); snapFrom.forEach(d => flightsMap.set(d.id, d.data()));
+                currentSheetFlights = Array.from(flightsMap.values()); currentSheetFlights.sort((a,b) => new Date(b.date) - new Date(a.date));
+                
+                if (currentUser) {
+                    document.getElementById('sheetSubtitle').textContent = `${currentSheetFlights.length} Flug/Flüge verzeichnet`;
+                    if (currentSheetFlights.length > 0) document.getElementById('sortSelect').classList.remove('hidden');
+                }
+
+                let routes = new Set(); currentSheetFlights.forEach(f => { if(f.fromIcao !== f.toIcao) routes.add(`${f.fromIcao}-${f.toIcao}`); });
                 for (let routeStr of routes) {
-                    let [fromIcao, toIcao] = routeStr.split('-');
-                    let isOutgoing = (fromIcao === icao);
-                    
-                    let fCoords = (fromIcao === icao) ? {lat, lon} : (currentLocs[fromIcao] || await fetchOverpass(fromIcao));
-                    let tCoords = (toIcao === icao) ? {lat, lon} : (currentLocs[toIcao] || await fetchOverpass(toIcao));
-                    
+                    let [fromIcao, toIcao] = routeStr.split('-'); let isOutgoing = (fromIcao === icao);
+                    let fCoords = (fromIcao === icao) ? {lat: toLat, lon: toLon} : (mapLocCache[fromIcao] || await fetchOverpass(fromIcao));
+                    let tCoords = (toIcao === icao) ? {lat: toLat, lon: toLon} : (mapLocCache[toIcao] || await fetchOverpass(toIcao));
                     if (fCoords && tCoords) {
-                        const mLat = (fCoords.lat + tCoords.lat)/2, mLng = (fCoords.lon + tCoords.lon)/2; 
-                        const cLat = mLat - (tCoords.lon - fCoords.lon)*0.2, cLng = mLng + (tCoords.lat - fCoords.lat)*0.2;
-                        let pts = []; 
-                        for(let t=0; t<=1; t+=0.05) pts.push([(1-t)*(1-t)*fCoords.lat + 2*(1-t)*t*cLat + t*t*tCoords.lat, (1-t)*(1-t)*fCoords.lon + 2*(1-t)*t*cLng + t*t*tCoords.lon]);
-                        
+                        const mLat = (fCoords.lat + tCoords.lat)/2, mLng = (fCoords.lon + tCoords.lon)/2; const cLat = mLat - (tCoords.lon - fCoords.lon)*0.2, cLng = mLng + (tCoords.lat - fCoords.lat)*0.2;
+                        let pts = []; for(let t=0; t<=1; t+=0.05) pts.push([(1-t)*(1-t)*fCoords.lat + 2*(1-t)*t*cLat + t*t*tCoords.lat, (1-t)*(1-t)*fCoords.lon + 2*(1-t)*t*cLng + t*t*tCoords.lon]);
                         const lineColor = isOutgoing ? '#3b82f6' : '#ef4444';
-                        linesRef.current.push(L.polyline(pts, {color: lineColor, weight: 3, opacity: 0.8, dashArray: '8,8'}).addTo(mapInstance.current));
+                        publicLines.push(L.polyline(pts, {color: lineColor, weight: 3, opacity: 0.8, dashArray: '8,8'}).addTo(publicMapInstance));
+                        const midIdx = Math.floor(pts.length / 2); const p1 = publicMapInstance.latLngToLayerPoint(pts[midIdx - 1]); const p2 = publicMapInstance.latLngToLayerPoint(pts[midIdx + 1]);
+                        const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+                        const arrowSvg = `<svg style="transform: rotate(${angle}deg); transform-origin: center;" width="16" height="16" viewBox="0 0 24 24" fill="${lineColor}"><path d="M24 12l-18 12v-24z"/></svg>`;
+                        const arrowIcon = L.divIcon({ className: 'bg-transparent', html: arrowSvg, iconSize: [16, 16], iconAnchor: [8, 8] });
+                        publicLines.push(L.marker(pts[midIdx], {icon: arrowIcon, interactive: false}).addTo(publicMapInstance));
                     }
                 }
-            } catch (e) { console.error("Flight fetch error", e); }
+                
+                if (currentUser) renderSheetContent();
+            } catch(e) { 
+                if (currentUser) document.getElementById('sheetContent').innerHTML = 'Fehler beim Laden.'; 
+            }
         }
-    };
 
-    // --- FORMULAR LOGIK (EDIT MODE) ---
-    const validateIcao = async (icao, type) => {
-        icao = icao.toUpperCase().trim();
-        if(icao.length !== 4) return setValidations(prev => ({...prev, [type]: null}));
-        
-        let loc = locations[icao];
-        if(!loc) {
-            try { 
-                const docSnap = await getDoc(doc(db, getColPath("locations"), icao)); 
-                if(docSnap.exists()) loc = docSnap.data(); 
-            } catch(e){} 
-            if(!loc) loc = await fetchOverpass(icao); 
+        function renderSheetContent() {
+            const sortBy = document.getElementById('sortSelect').value; const contentDiv = document.getElementById('sheetContent'); let html = '';
+            const formatDate = (dStr) => { const d = new Date(dStr); return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getFullYear()).slice(-2)}`; };
+            const flightHtml = (f) => {
+                const isOutgoing = f.fromIcao === currentSheetIcao; const badge = isOutgoing ? '<span class="text-blue-600 bg-blue-100 px-2 py-0.5 rounded mr-2">Abflug</span>' : '<span class="text-red-600 bg-red-100 px-2 py-0.5 rounded mr-2">Ankunft</span>';
+                return `<details class="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-3"><summary class="p-4 cursor-pointer flex justify-between hover:bg-gray-50 items-center"><div class="font-bold text-sm sm:text-base flex items-center">${badge} ${formatDate(f.date)} <span class="text-gray-400 font-normal ml-2">${f.fromIcao} ➔ ${f.toIcao}</span></div><div class="group-open:rotate-180 transform transition-transform text-gray-400">▼</div></summary><div class="p-4 bg-gray-50 text-xs sm:text-sm border-t border-gray-100 text-gray-700">${f.startTime ? 'Start: '+f.startTime+' Uhr<br>' : ''}${f.endTime ? 'Landung: '+f.endTime+' Uhr<br>' : ''}${f.notes ? '<i class="mt-2 block text-gray-500">"'+f.notes+'"</i>' : ''}</div></details>`;
+            };
+
+            if (currentSheetFlights.length === 0) { contentDiv.innerHTML = 'Keine Flüge gefunden.'; return; }
+            if (sortBy === 'date') { html += '<div class="space-y-3">'; currentSheetFlights.forEach(f => { html += flightHtml(f); }); html += '</div>';
+            } else if (sortBy === 'frequency') {
+                const groups = {}; currentSheetFlights.forEach(f => { 
+                    const isOutgoing = f.fromIcao === currentSheetIcao; const partnerIcao = isOutgoing ? f.toIcao : f.fromIcao; const label = isOutgoing ? `Nach ${partnerIcao}` : `Von ${partnerIcao}`;
+                    if (!groups[label]) groups[label] = { label, isOutgoing, flights: [] }; groups[label].flights.push(f); 
+                });
+                Object.values(groups).sort((a, b) => b.flights.length - a.flights.length).forEach(group => {
+                    const colorClass = group.isOutgoing ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'; const borderClass = group.isOutgoing ? 'border-blue-200' : 'border-red-200';
+                    html += `<div class="mb-6"><div class="flex items-center gap-2 mb-3 px-2"><span class="${colorClass} text-xs font-bold px-2 py-1 rounded">${group.label}</span><span class="text-gray-500 text-xs sm:text-sm">${group.flights.length} Flug${group.flights.length !== 1 ? 'e' : ''}</span></div><div class="space-y-0 pl-2 border-l-2 ${borderClass}">`;
+                    group.flights.forEach(f => { html += flightHtml(f); }); html += `</div></div>`;
+                });
+            }
+            contentDiv.innerHTML = html;
         }
-        setValidations(prev => ({...prev, [type]: loc ? loc.name : 'Nicht gefunden'}));
-        if(loc && type === 'to' && mapInstance.current) mapInstance.current.setView([loc.lat, loc.lon], 8);
-        return loc;
-    };
 
-    const handleSaveFlight = async () => {
-        const { fromIcao, toIcao, date, startTime, endTime, notes } = form;
-        if(!fromIcao || !toIcao || !date) return setFormStatus({ msg: "Bitte Start, Ziel und Datum füllen", isError: true });
-        
-        setFormStatus({ msg: "Speichere...", isError: false });
-        try {
-            let fLoc = locations[fromIcao] || await validateIcao(fromIcao, 'from');
-            let tLoc = locations[toIcao] || await validateIcao(toIcao, 'to');
-            if(!fLoc || !tLoc || validations.from === 'Nicht gefunden' || validations.to === 'Nicht gefunden') throw new Error("Flughafen ungültig");
-            
-            await setDoc(doc(db, getColPath("locations"), fromIcao), { name: fLoc.name||fromIcao, lat: fLoc.lat, lon: fLoc.lon, departures: increment(1) }, { merge: true });
-            await setDoc(doc(db, getColPath("locations"), toIcao), { name: tLoc.name||toIcao, lat: tLoc.lat, lon: tLoc.lon, landings: increment(1) }, { merge: true });
-            await addDoc(collection(db, getColPath("flights")), { fromIcao, toIcao, date, startTime, endTime, notes, timestamp: new Date() });
-            
-            setFormStatus({ msg: "Erfolgreich!", isError: false });
-            setForm({ fromIcao: '', toIcao: '', date: new Date().toISOString().split('T')[0], startTime: '', endTime: '', notes: '' });
-            setValidations({from: null, to: null});
-            setTimeout(() => setFormStatus({msg:'', isError:false}), 3000);
-        } catch(e) { 
-            setFormStatus({ msg: "Fehler beim Speichern", isError: true }); 
+        document.getElementById('sortSelect').addEventListener('change', renderSheetContent);
+        document.getElementById('closeSheetBtn').addEventListener('click', () => { document.getElementById('bottomSheet').classList.add('translate-y-full'); resetMapHighlights(); });
+
+        // --- 6. EDITOR ---
+        function initEditMap() {
+            if (!editMapInstance) { editMapInstance = L.map('editMap').setView([50.0, 10.0], 5); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(editMapInstance); }
+            if(!document.getElementById('date').value) document.getElementById('date').valueAsDate = new Date();
         }
-    };
 
-    if (isEditMode) {
-        return (
-            <div className="flex flex-col md:flex-row gap-4 p-4 bg-gray-100 flex-grow" style={{ height: 'calc(100dvh - 64px)' }}>
-                <div className="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-md flex flex-col h-auto md:h-full overflow-y-auto z-10">
-                    <h3 className="text-xl font-bold text-gray-800 mb-6 shrink-0">Neuen Flug eintragen</h3>
-                    <div className="space-y-4 flex-grow">
-                        <div>
-                            <label className="label">Start (ICAO)</label>
-                            <input value={form.fromIcao} onChange={e => { setForm({...form, fromIcao: e.target.value.toUpperCase()}); validateIcao(e.target.value, 'from'); }} className={`input-field uppercase ${validations.from && validations.from !== 'Nicht gefunden' ? 'border-green-500' : ''}`} maxLength="4" required />
-                            <div className={`text-xs mt-1 h-4 ${validations.from === 'Nicht gefunden' ? 'text-red-500' : 'text-green-600 font-bold'}`}>{validations.from && (validations.from === 'Nicht gefunden' ? validations.from : `✓ ${validations.from}`)}</div>
-                        </div>
-                        <div>
-                            <label className="label">Ziel (ICAO)</label>
-                            <input value={form.toIcao} onChange={e => { setForm({...form, toIcao: e.target.value.toUpperCase()}); validateIcao(e.target.value, 'to'); }} className={`input-field uppercase ${validations.to && validations.to !== 'Nicht gefunden' ? 'border-green-500' : ''}`} maxLength="4" required />
-                            <div className={`text-xs mt-1 h-4 ${validations.to === 'Nicht gefunden' ? 'text-red-500' : 'text-green-600 font-bold'}`}>{validations.to && (validations.to === 'Nicht gefunden' ? validations.to : `✓ ${validations.to}`)}</div>
-                        </div>
-                        <div className="grid grid-cols-1 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                            <div><label className="label">Datum</label><input type="date" value={form.date} onChange={e => setForm({...form, date: e.target.value})} className="input-field bg-white" required /></div>
-                            <div className="flex gap-4">
-                                <div className="w-1/2"><label className="label">Startzeit</label><input type="time" value={form.startTime} onChange={e => setForm({...form, startTime: e.target.value})} className="input-field bg-white" /></div>
-                                <div className="w-1/2"><label className="label">Landezeit</label><input type="time" value={form.endTime} onChange={e => setForm({...form, endTime: e.target.value})} className="input-field bg-white" /></div>
-                            </div>
-                        </div>
-                        <div><label className="label">Notizen</label><textarea value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} rows="2" className="input-field resize-none"></textarea></div>
-                    </div>
-                    <div className="mt-6 shrink-0">
-                        <button onClick={handleSaveFlight} disabled={formStatus.msg === 'Speichere...'} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow disabled:opacity-50">Speichern</button>
-                        <div className={`text-center text-sm font-semibold h-5 mt-2 ${formStatus.isError ? 'text-red-500' : 'text-green-500'}`}>{formStatus.msg}</div>
-                    </div>
-                </div>
-                <div className="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[300px] md:min-h-[400px] relative z-0">
-                    <div ref={mapRef} className="w-full h-full absolute inset-0"></div>
-                </div>
-            </div>
-        );
-    }
+        let editCache = {};
+        async function validateField(id, resId) {
+            const inp = document.getElementById(id), res = document.getElementById(resId), icao = inp.value.toUpperCase().trim();
+            if(icao.length !== 4) { res.innerHTML=''; inp.classList.remove('border-green-500'); return null; }
+            res.innerHTML = '<span class="text-blue-500">Prüfe...</span>';
+            let loc = editCache[icao];
+            if(!loc) { try { const docSnap = await getDoc(doc(db, "locations", icao)); if(docSnap.exists()) loc = docSnap.data(); } catch(e){} if(!loc) loc = await fetchOverpass(icao); if(loc) editCache[icao] = loc; }
+            if(loc) { res.innerHTML = `<span class="text-green-600 font-bold">✓</span> ${loc.name||'Gefunden'}`; inp.classList.add('border-green-500'); if(id==='toIcao' && editMapInstance) editMapInstance.setView([loc.lat, loc.lon], 8); return loc; }
+            else { res.innerHTML = '<span class="text-red-500">Nicht gefunden</span>'; inp.classList.remove('border-green-500'); return null; }
+        }
+        document.getElementById('fromIcao').addEventListener('input', () => validateField('fromIcao', 'fromResult'));
+        document.getElementById('toIcao').addEventListener('input', () => validateField('toIcao', 'toResult'));
 
-    return (
-        <div className="relative bg-gray-200 overflow-hidden flex-grow block" style={{ height: 'calc(100dvh - 64px)' }}>
-            <div ref={mapRef} className="w-full h-full absolute inset-0 z-0"></div>
-            
-            <div className={`absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transform transition-transform duration-300 z-[10] max-h-[85vh] flex flex-col ${sheetData ? 'translate-y-0' : 'translate-y-full'}`}>
-                <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center sticky top-0 bg-white rounded-t-3xl gap-2">
-                    <div>
-                        <h2 className="text-lg sm:text-xl font-bold text-gray-800">{sheetData ? `${sheetData.icao} - ${sheetData.name}` : 'Flughafen'}</h2>
-                        <p className="text-xs sm:text-sm text-gray-500">{!user ? 'Login erforderlich für Details' : `${flights.length} Flüge verzeichnet`}</p>
-                    </div>
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
-                        <button onClick={() => setSheetData(null)} className="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">✕</button>
-                    </div>
-                </div>
-                <div className="p-4 overflow-y-auto flex-grow bg-gray-50 h-[300px]">
-                    {!user ? (
-                        <div className="text-gray-500">Flugdetails sind nur für Mitglieder sichtbar.</div>
-                    ) : flights.length === 0 ? (
-                        <div className="text-gray-500">Lade Flüge oder keine Flüge gefunden...</div>
-                    ) : (
-                        <div className="space-y-3">
-                            {flights.map((f, idx) => {
-                                const isOut = f.fromIcao === sheetData.icao;
-                                return (
-                                    <details key={idx} className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-3">
-                                        <summary className="p-4 cursor-pointer flex justify-between hover:bg-gray-50 items-center outline-none">
-                                            <div className="font-bold text-sm sm:text-base flex items-center">
-                                                <span className={`px-2 py-0.5 rounded mr-2 ${isOut ? 'text-blue-600 bg-blue-100' : 'text-red-600 bg-red-100'}`}>{isOut ? 'Abflug' : 'Ankunft'}</span>
-                                                {new Date(f.date).toLocaleDateString('de-DE')} <span className="text-gray-400 font-normal ml-2">{f.fromIcao} ➔ {f.toIcao}</span>
-                                            </div>
-                                        </summary>
-                                        <div className="p-4 bg-gray-50 text-xs sm:text-sm border-t border-gray-100 text-gray-700">
-                                            {f.startTime && <div>Start: {f.startTime} Uhr</div>}
-                                            {f.endTime && <div>Landung: {f.endTime} Uhr</div>}
-                                            {f.notes && <i className="mt-2 block text-gray-500">"{f.notes}"</i>}
-                                        </div>
-                                    </details>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const AdminView = () => {
-    const [file, setFile] = useState(null);
-    const [status, setStatus] = useState({ msg: '', isError: false });
-    const [images, setImages] = useState([]);
-    const [csv, setCsv] = useState('');
-    const [csvStatus, setCsvStatus] = useState({msg: '', isError: false});
-
-    useEffect(() => {
-        const unsub = onSnapshot(collection(db, getColPath("slideshow_images")), snap => {
-            setImages(snap.docs.map(d => ({id: d.id, ...d.data()})));
+        document.getElementById('saveFlightBtn').addEventListener('click', async () => {
+            const f = document.getElementById('fromIcao').value.toUpperCase().trim(), t = document.getElementById('toIcao').value.toUpperCase().trim(), d = document.getElementById('date').value, stat = document.getElementById('saveFlightStatus'), btn = document.getElementById('saveFlightBtn');
+            if(!f || !t || !d) { stat.textContent="Bitte Start, Ziel, Datum füllen"; stat.className="text-red-500 mt-2 text-center text-sm font-semibold"; return; }
+            btn.disabled = true; stat.textContent="Speichere..."; stat.className="text-blue-500 mt-2 text-center text-sm font-semibold animate-pulse";
+            try {
+                let fLoc = editCache[f] || await validateField('fromIcao', 'fromResult'), tLoc = editCache[t] || await validateField('toIcao', 'toResult');
+                if(!fLoc || !tLoc) throw new Error("Flughafen ungültig");
+                await setDoc(doc(db, "locations", f), { name: fLoc.name||f, lat: fLoc.lat, lon: fLoc.lon, departures: increment(1) }, { merge: true });
+                await setDoc(doc(db, "locations", t), { name: tLoc.name||t, lat: tLoc.lat, lon: tLoc.lon, landings: increment(1) }, { merge: true });
+                await addDoc(collection(db, "flights"), { fromIcao: f, toIcao: t, date: d, startTime: document.getElementById('startTime').value, endTime: document.getElementById('endTime').value, notes: document.getElementById('notes').value, timestamp: new Date() });
+                stat.textContent="Erfolgreich!"; stat.className="text-green-500 mt-2 text-center text-sm font-semibold";
+                ['fromIcao','toIcao','startTime','endTime','notes'].forEach(id => document.getElementById(id).value=''); ['fromResult','toResult'].forEach(id => document.getElementById(id).innerHTML=''); document.getElementById('fromIcao').classList.remove('border-green-500'); document.getElementById('toIcao').classList.remove('border-green-500');
+            } catch(e) { stat.textContent="Fehler!"; stat.className="text-red-500 mt-2 text-center text-sm font-semibold"; } finally { btn.disabled = false; setTimeout(() => {if(stat.textContent==="Erfolgreich!")stat.textContent=""},3000); }
         });
-        return () => unsub();
-    }, []);
 
-    const handleUpload = async () => {
-        if (!file) return;
-        setStatus({ msg: 'Lädt hoch...', isError: false });
-        try {
-            const fd = new FormData(); 
-            fd.append("file", file); 
-            fd.append("upload_preset", "lycl49dd"); // KRITISCH: Unsigned Upload ist ein Sicherheitsrisiko!
-            
-            const res = await fetch(`https://api.cloudinary.com/v1_1/drpuhsspx/image/upload`, { method: 'POST', body: fd });
-            if (!res.ok) throw new Error("Upload Failed"); 
-            const data = await res.json();
-            
-            await addDoc(collection(db, getColPath("slideshow_images")), { url: data.secure_url, cloudinaryId: data.public_id, uploadedAt: new Date() });
-            setStatus({ msg: 'Erfolgreich!', isError: false });
-            setFile(null);
-            setTimeout(() => setStatus({msg:'', isError:false}), 3000);
-        } catch(e) { 
-            setStatus({ msg: 'Upload Fehler!', isError: true }); 
-        }
-    };
+        // --- 7. ADMIN: UPLOAD & CSV IMPORT ---
+        let adminFile = null;
+        document.getElementById('imageUpload').addEventListener('change', (e) => { if(e.target.files.length > 0) { adminFile = e.target.files[0]; document.getElementById('fileName').textContent = adminFile.name; document.getElementById('uploadCloudinaryBtn').disabled = false; }});
+        document.getElementById('uploadCloudinaryBtn').addEventListener('click', async () => {
+            if(!adminFile) return; const btn = document.getElementById('uploadCloudinaryBtn'), stat = document.getElementById('uploadStatus');
+            btn.disabled=true; stat.textContent="Lädt hoch..."; stat.className="text-blue-500 mt-3 text-center text-sm font-semibold animate-pulse";
+            try {
+                const fd = new FormData(); fd.append("file", adminFile); fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+                const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+                if(!res.ok) throw new Error("Upload Failed"); const data = await res.json();
+                await addDoc(collection(db, "slideshow_images"), { url: data.secure_url, cloudinaryId: data.public_id, uploadedAt: new Date() });
+                stat.textContent="Erfolgreich!"; stat.className="text-green-500 mt-3 text-center text-sm font-semibold"; adminFile=null; document.getElementById('imageUpload').value=''; document.getElementById('fileName').textContent="Kein Bild ausgewählt";
+            } catch(e) { stat.textContent="Upload Fehler!"; stat.className="text-red-500 mt-3 text-center text-sm font-semibold"; } finally { setTimeout(() => {if(stat.textContent==="Erfolgreich!")stat.textContent=""},3000); }
+        });
 
-    const handleDelete = async (id) => {
-        if(window.confirm("Bild von der Startseite entfernen?")) {
-            await deleteDoc(doc(db, getColPath("slideshow_images"), id));
-        }
-    };
-
-    const handleCsvImport = async () => {
-        if (!csv) return;
-        setCsvStatus({ msg: 'Analysiere...', isError: false });
-        try {
-            const lines = csv.split('\n').map(l => l.trim()).filter(l => l); 
-            const newFlights = []; 
-            const icaos = new Set();
-            
-            lines.forEach(line => {
-                const parts = line.split(',');
-                if(parts.length >= 6) {
-                    const [dateStr, pilot, fromIcao, toIcao, startTime, endTime] = parts;
-                    const dParts = dateStr.split('.');
-                    if(dParts.length === 3) {
-                        newFlights.push({ date: `${dParts[2]}-${dParts[1]}-${dParts[0]}`, pilot, fromIcao: fromIcao.toUpperCase(), toIcao: toIcao.toUpperCase(), startTime, endTime, notes: "", timestamp: new Date() });
-                        icaos.add(fromIcao.toUpperCase()); icaos.add(toIcao.toUpperCase());
-                    }
-                }
+        function loadGallery() {
+            onSnapshot(collection(db, "slideshow_images"), (snap) => {
+                const gal = document.getElementById('imagesGallery'); gal.innerHTML = '';
+                if(snap.empty) { gal.innerHTML = '<div class="text-gray-500 col-span-3">Keine Bilder.</div>'; return; }
+                snap.forEach(docSnap => {
+                    const data = docSnap.data(), div = document.createElement('div');
+                    div.className = "relative group rounded-xl overflow-hidden border border-gray-200 aspect-video bg-gray-100";
+                    div.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><button class="bg-red-600 text-white font-bold py-2 px-4 rounded" onclick="deleteImg('${docSnap.id}')">Entfernen</button></div>`;
+                    gal.appendChild(div);
+                });
             });
-            if(newFlights.length === 0) throw new Error("Keine gültigen Zeilen.");
-            setCsvStatus({msg: `${newFlights.length} Flüge analysiert. Speichere...`, isError: false});
-            
-            // Note: Optimierter Import für das Frontend
-            for(let f of newFlights) {
-                await addDoc(collection(db, getColPath("flights")), f);
-                await setDoc(doc(db, getColPath("locations"), f.fromIcao), { departures: increment(1) }, { merge: true });
-                await setDoc(doc(db, getColPath("locations"), f.toIcao), { landings: increment(1) }, { merge: true });
-            }
-            setCsvStatus({ msg: 'Erfolgreich importiert!', isError: false });
-            setCsv('');
-        } catch(e) {
-            setCsvStatus({ msg: 'Fehler: CSV Format prüfen.', isError: true });
         }
-    };
+        window.deleteImg = async (id) => { if(confirm("Bild von der Startseite entfernen?")) { try { await deleteDoc(doc(db, "slideshow_images", id)); } catch(e){} } };
 
-    return (
-        <div className="p-4 bg-gray-100 flex-grow overflow-y-auto" style={{ height: 'calc(100dvh - 64px)' }}>
-            <div className="max-w-5xl mx-auto w-full">
-                <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-2 sm:mt-4">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Admin Dashboard</h2>
-                    
-                    <div className="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
-                        <h3 className="font-bold text-gray-700 mb-2">Slideshow Bilder</h3>
-                        <input type="file" id="imageUpload" accept="image/*" className="hidden" onChange={e => setFile(e.target.files[0])} />
-                        <label htmlFor="imageUpload" className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow inline-block mb-3">Bild auswählen</label>
-                        <p className="text-sm text-gray-500 mb-4">{file ? file.name : 'Kein Bild ausgewählt'}</p>
-                        <button onClick={handleUpload} disabled={!file || status.msg === 'Lädt hoch...'} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow disabled:opacity-50">Hochladen</button>
-                        <div className={`mt-3 font-semibold text-sm h-5 ${status.isError ? 'text-red-500' : 'text-blue-500'}`}>{status.msg}</div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-12">
-                        {images.map(img => (
-                            <div key={img.id} className="relative group rounded-xl overflow-hidden border border-gray-200 aspect-video bg-gray-100">
-                                <img src={img.url} className="w-full h-full object-cover" alt="Slide" />
-                                <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <button onClick={() => handleDelete(img.id)} className="bg-red-600 text-white font-bold py-2 px-4 rounded">Entfernen</button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    
-                    <div className="bg-blue-50 p-4 sm:p-6 rounded-xl border border-blue-200">
-                        <h3 className="font-bold text-blue-900 mb-2 text-lg sm:text-xl">CSV Import</h3>
-                        <textarea value={csv} onChange={e => setCsv(e.target.value)} rows="6" className="w-full p-3 border border-blue-300 rounded-lg outline-none focus:border-blue-500 mb-4 font-mono text-xs sm:text-sm" placeholder="Datum,Wer ist geflogen,Start,Landung,Start,Landung"></textarea>
-                        <button onClick={handleCsvImport} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow disabled:opacity-50">Daten importieren</button>
-                        <div className={`mt-3 font-semibold text-sm ${csvStatus.isError ? 'text-red-500' : 'text-blue-500'}`}>{csvStatus.msg}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const LoginView = ({ setHash }) => {
-    const [creds, setCreds] = useState({ user: '', pass: '' });
-    const [err, setErr] = useState('');
-
-    const handleLogin = async () => {
-        if(!creds.user || !creds.pass) return setErr('Bitte füllen');
-        setErr('Prüfe...');
-        try {
-            const userDoc = await getDoc(doc(db, "usernames", creds.user));
-            if (userDoc.exists()) {
-                await signInWithEmailAndPassword(auth, userDoc.data().email, creds.pass);
-                setHash('home');
-            } else { setErr('Benutzer nicht gefunden.'); }
-        } catch (e) { setErr('Fehler. DB-Regeln?'); }
-    };
-
-    return (
-        <div className="flex flex-grow items-center justify-center bg-gray-100 px-4" style={{ height: 'calc(100dvh - 64px)' }}>
-            <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center">
-                <h3 className="text-2xl font-bold mb-6 text-gray-800">Mitglieds-Login</h3>
-                <input value={creds.user} onChange={e => setCreds({...creds, user: e.target.value})} placeholder="Benutzername" className="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required />
-                <input type="password" value={creds.pass} onChange={e => setCreds({...creds, pass: e.target.value})} placeholder="Passwort" className="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required />
-                <button onClick={handleLogin} className="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg">Einloggen</button>
-                <div className="my-4 border-t border-gray-200 relative"><span className="absolute top-[-10px] left-1/2 transform -translate-x-1/2 bg-white px-2 text-gray-400 text-sm">oder</span></div>
-                <button onClick={() => signInWithPopup(auth, new GoogleAuthProvider()).then(()=>setHash('home'))} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg">Mit Google anmelden</button>
-                <div className="text-red-500 mt-4 text-sm font-semibold">{err}</div>
-            </div>
-        </div>
-    );
-};
-
-export default function App() {
-    const [currentHash, setCurrentHash] = useState('home');
-    const [user, setUser] = useState(null);
-    const [authInitialized, setAuthInitialized] = useState(false);
-
-    useEffect(() => {
-        const initAuth = async () => {
-            if (isSandbox && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token).catch(() => signInAnonymously(auth));
-            }
-        };
-        initAuth();
-        const unsub = onAuthStateChanged(auth, u => {
-            setUser(u);
-            setAuthInitialized(true);
+        document.getElementById('runImportBtn').addEventListener('click', async () => {
+            const csvText = document.getElementById('importCsvData').value; const stat = document.getElementById('importStatus'); const btn = document.getElementById('runImportBtn');
+            if(!csvText) return; btn.disabled = true; stat.textContent = "Analysiere CSV Daten..."; stat.className = "text-blue-500 mt-3 font-semibold text-sm animate-pulse";
+            try {
+                const lines = csvText.split('\n').map(l => l.trim()).filter(l => l); const flights = []; const icaos = new Set();
+                lines.forEach(line => {
+                    const parts = line.split(',');
+                    if(parts.length >= 6) {
+                        const [dateStr, pilot, fromIcao, toIcao, startTime, endTime] = parts;
+                        const dParts = dateStr.split('.');
+                        if(dParts.length === 3) {
+                            flights.push({ date: `${dParts[2]}-${dParts[1]}-${dParts[0]}`, pilot: pilot, fromIcao: fromIcao.toUpperCase(), toIcao: toIcao.toUpperCase(), startTime: startTime, endTime: endTime, notes: "", timestamp: new Date() });
+                            icaos.add(fromIcao.toUpperCase()); icaos.add(toIcao.toUpperCase());
+                        }
+                    }
+                });
+                if(flights.length === 0) throw new Error("Keine gültigen Zeilen gefunden.");
+                stat.textContent = `${flights.length} Flüge und ${icaos.size} Flughäfen gefunden. Prüfe Koordinaten...`;
+                const resolvedLocations = {};
+                for(let icao of icaos) {
+                    const docSnap = await getDoc(doc(db, "locations", icao));
+                    if(docSnap.exists()) { resolvedLocations[icao] = docSnap.data(); } else {
+                        stat.textContent = `Suche Koordinaten für neuen Flughafen: ${icao}...`;
+                        const opLoc = await fetchOverpass(icao);
+                        if(opLoc) { resolvedLocations[icao] = opLoc; await setDoc(doc(db, "locations", icao), { name: opLoc.name || icao, lat: opLoc.lat, lon: opLoc.lon, departures: 0, landings: 0 }); }
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                }
+                stat.textContent = `Importiere ${flights.length} Flüge in die Datenbank...`;
+                let count = 0;
+                for(let f of flights) {
+                    if(!resolvedLocations[f.fromIcao] || !resolvedLocations[f.toIcao]) continue;
+                    await addDoc(collection(db, "flights"), f);
+                    await setDoc(doc(db, "locations", f.fromIcao), { departures: increment(1) }, { merge: true });
+                    await setDoc(doc(db, "locations", f.toIcao), { landings: increment(1) }, { merge: true });
+                    count++; if(count % 10 === 0) stat.textContent = `Importiere... ${count} / ${flights.length} abgeschlossen`;
+                }
+                stat.textContent = `Erfolgreich! ${count} Flüge wurden importiert.`; stat.className = "text-green-500 mt-3 font-semibold text-sm"; document.getElementById('importCsvData').value = '';
+            } catch (e) { stat.textContent = "Fehler: Überprüfe das CSV Format."; stat.className = "text-red-500 mt-3 font-semibold text-sm"; } finally { btn.disabled = false; }
         });
-        return unsub;
-    }, []);
 
-    if (!authInitialized) return <div className="min-h-screen flex items-center justify-center">Lade...</div>;
-
-    const renderView = () => {
-        if (['edit', 'admin'].includes(currentHash) && !user && !isSandbox) return <LoginView setHash={setCurrentHash} />;
-        switch (currentHash) {
-            case 'map': return <MapView user={user} />;
-            case 'edit': return <MapView user={user} isEditMode={true} />;
-            case 'admin': return <AdminView />;
-            case 'crew': return <CrewView />;
-            case 'flieger': return <FliegerView />;
-            case 'login': return <LoginView setHash={setCurrentHash} />;
-            default: return <HomeView setHash={setCurrentHash} />;
-        }
-    };
-
-    return (
-        <div className="flex flex-col min-h-[100dvh]">
-            <Navbar user={user} currentHash={currentHash} setHash={setCurrentHash} />
-            {renderView()}
-        </div>
-    );
-}
+        // INITIALSTART
+        handleRouting();
+    </script>
+</body>
+</html>
