@@ -224,15 +224,15 @@
 
     <!-- LIGHTBOX MODAL -->
     <div id="lightbox" class="fixed inset-0 bg-black/95 z-[100000] hidden flex-col items-center justify-center p-4">
-        <div class="absolute top-4 right-4 flex gap-4 z-50">
-            <a id="lightboxDownload" href="#" download class="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full transition-colors shadow-lg" title="Herunterladen">
+        <div class="absolute top-4 right-4 flex gap-4 z-[100001]">
+            <a id="lightboxDownload" href="#" download class="bg-gray-800/80 backdrop-blur-sm hover:bg-gray-700 text-white p-3 rounded-full transition-colors shadow-lg" title="Herunterladen">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             </a>
-            <button id="lightboxClose" class="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full transition-colors shadow-lg" title="Schließen">
+            <button id="lightboxClose" class="bg-gray-800/80 backdrop-blur-sm hover:bg-gray-700 text-white p-3 rounded-full transition-colors shadow-lg" title="Schließen">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
-        <img id="lightboxImg" src="" class="max-w-full max-h-[85vh] object-contain rounded shadow-2xl">
+        <img id="lightboxImg" src="" class="max-w-full max-h-[85vh] object-contain rounded shadow-2xl relative z-[100000]">
     </div>
 
     <!-- VIEW: ÖFFENTLICHE KARTE (#map) -->
@@ -825,7 +825,21 @@
             }
         }
 
-        document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+        const handleClose = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeLightbox();
+        };
+
+        const closeBtn = document.getElementById('lightboxClose');
+        closeBtn.addEventListener('click', handleClose);
+        closeBtn.addEventListener('touchend', handleClose);
+        
+        const downloadBtn = document.getElementById('lightboxDownload');
+        downloadBtn.addEventListener('touchend', (e) => { 
+            e.stopPropagation(); 
+        });
+
         lightbox.addEventListener('click', (e) => { if(e.target === lightbox) closeLightbox(); });
 
         document.getElementById('runImportBtn').addEventListener('click', async () => {
