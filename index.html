@@ -12,16 +12,7 @@
                 extend: {
                     colors: {
                         cardinal: {
-                            50: '#fdf3f3',
-                            100: '#fce4e5',
-                            200: '#f8cacc',
-                            300: '#f3a2a6',
-                            400: '#ec6a71',
-                            500: '#e53e45',
-                            600: '#d52226', /* Dein gewünschtes Rot */
-                            700: '#b2191d',
-                            800: '#94171a',
-                            900: '#7a181a',
+                            50: '#fdf3f3',100: '#fce4e5',200: '#f8cacc',300: '#f3a2a6',400: '#ec6a71',500: '#e53e45',600: '#d52226',700: '#b2191d',800: '#94171a',900: '#7a181a',
                         }
                     }
                 }
@@ -209,7 +200,8 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-0"></div>
         <div class="relative z-10 flex flex-col items-center justify-end h-full px-4 pb-12 w-full">
             <div class="text-center space-y-6 w-full flex flex-col items-center">
-                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="h-16 md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+                <!-- Logo auf Mobile extrem verkleinert (h-8), auf Desktop bleibt es groß (md:h-20) -->
+                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="h-8 sm:h-12 md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
                 <h2 class="text-sm md:text-base font-bold text-white/70 tracking-[0.3em] uppercase drop-shadow-md">Kontakt</h2>
                 <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 w-full">
                     <a href="mailto:cs@fly-cardinal.de" class="text-lg md:text-xl font-light text-white hover:text-blue-300 transition-colors drop-shadow-lg">cs@fly-cardinal.de</a>
@@ -267,28 +259,27 @@
     <!-- ========================================== -->
     <!-- VIEW: ÖFFENTLICHE KARTE (#map)             -->
     <!-- ========================================== -->
-    <section id="view-map" class="view-section bg-gray-100 w-full block p-2 sm:p-6 lg:p-4" style="height: calc(100dvh - 64px);">
-        <!-- Eingebetteter Rahmen für die Karte -->
-        <div class="relative w-full h-full bg-gray-200 rounded-2xl sm:rounded-3xl shadow-lg border border-gray-200 overflow-hidden">
-            <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
-            
-            <!-- Bottom Sheet muss sich jetzt im Rahmen befinden, nicht mehr am Bildschirmrand -->
-            <div id="bottomSheet" class="absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-2xl sm:rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[10] max-h-[85%] flex flex-col">
-                <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center sticky top-0 bg-white rounded-t-2xl sm:rounded-t-3xl gap-2">
-                    <div><h2 id="sheetTitle" class="text-lg sm:text-xl font-bold text-gray-800">Flughafen</h2><p id="sheetSubtitle" class="text-xs sm:text-sm text-gray-500">Lade...</p></div>
-                    <div class="flex items-center gap-2 self-end sm:self-auto">
-                        <select id="sortSelect" class="bg-gray-100 text-gray-700 border-none rounded-lg px-2 py-2 text-xs sm:text-sm outline-none cursor-pointer hidden">
-                            <option value="date">Nach Datum</option>
-                            <option value="frequency">Nach Häufigkeit</option>
-                        </select>
-                        <button id="closeSheetBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">✕</button>
-                    </div>
+    <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden w-full block" style="height: calc(100dvh - 64px);">
+        <!-- Eingebetteter Rahmen entfernt, Karte nutzt wieder 100% -->
+        <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
+        
+        <div id="bottomSheet" class="absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[10] max-h-[85vh] flex flex-col">
+            <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center sticky top-0 bg-white rounded-t-3xl gap-2">
+                <div><h2 id="sheetTitle" class="text-lg sm:text-xl font-bold text-gray-800">Flughafen</h2><p id="sheetSubtitle" class="text-xs sm:text-sm text-gray-500">Lade...</p></div>
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                    <select id="sortSelect" class="bg-gray-100 text-gray-700 border-none rounded-lg px-2 py-2 text-xs sm:text-sm outline-none cursor-pointer hidden">
+                        <option value="date">Nach Datum</option>
+                        <option value="frequency">Nach Häufigkeit</option>
+                    </select>
+                    <button id="closeSheetBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">✕</button>
                 </div>
-                <div id="sheetContent" class="p-4 overflow-y-auto flex-grow bg-gray-50 h-[300px]"></div>
             </div>
+            <div id="sheetContent" class="p-4 overflow-y-auto flex-grow bg-gray-50 h-[300px]"></div>
         </div>
     </section>
 
+    <!-- ========================================== -->
+    <!-- VIEW: LOGIN (#login)                       -->
     <!-- ========================================== -->
     <!-- SCRIPTE & LOGIK                            -->
     <!-- ========================================== -->
