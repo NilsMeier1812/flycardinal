@@ -200,8 +200,8 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-0"></div>
         <div class="relative z-10 flex flex-col items-center justify-end h-full px-4 pb-12 w-full">
             <div class="text-center space-y-6 w-full flex flex-col items-center">
-                <!-- Logo auf Mobile komplett ausgeblendet (hidden), ab Tablet wieder sichtbar (sm:block) -->
-                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="hidden sm:block sm:h-12 md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+                <!-- Logo auf Mobile komplett ausgeblendet, nur ab Desktop (md) sichtbar -->
+                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="hidden md:block md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
                 <h2 class="text-sm md:text-base font-bold text-white/70 tracking-[0.3em] uppercase drop-shadow-md">Kontakt</h2>
                 <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 w-full">
                     <a href="mailto:cs@fly-cardinal.de" class="text-lg md:text-xl font-light text-white hover:text-blue-300 transition-colors drop-shadow-lg">cs@fly-cardinal.de</a>
@@ -259,7 +259,7 @@
     <!-- ========================================== -->
     <!-- VIEW: ÖFFENTLICHE KARTE (#map)             -->
     <!-- ========================================== -->
-    <!-- FIX: 'block' Klasse entfernt, da sie flexbox der view-section stört -->
+    <!-- FIX: '!block' Hack entfernt. Der ResizeObserver löst das Flexbox-Problem jetzt sauber. -->
     <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden w-full" style="height: calc(100dvh - 64px);">
         <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
         
@@ -293,9 +293,9 @@
             cardCrew: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508977/crew_cap_gmo167.jpg",
             cardFlieger: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773183503/tph6mupwfye94zatsgcb.jpg",
             crewHintergrund: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508979/uli_veste_fjhzui.png",
-            fliegerHero: "https://images.unsplash.com/photo-1583072046894-370cc3672013?q=80&w=2000&auto=format&fit=crop",
-            fliegerDetail1: "https://images.unsplash.com/photo-1605367622831-29cf63b2f9f1?q=80&w=800&auto=format&fit=crop",
-            fliegerDetail2: "https://images.unsplash.com/photo-1540962351504-03099e0a754b?q=80&w=800&auto=format&fit=crop"
+            fliegerHero: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg",
+            fliegerDetail1: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg",
+            fliegerDetail2: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg"
         };
 
         function ladeAlleBilder() {
@@ -369,14 +369,11 @@
             
             if (hash === '#map') {
                 initPublicMap();
-                // FIX: Kaskadierende Timeouts für Mobile Safari/Chrome. 
-                // Das Rendern des mobilen DOMs (speziell 100dvh) dauert oft länger, 
-                // wodurch Leaflet eine Größe von 0x0 annimmt und keine Pins/Kacheln zeichnet.
-                [10, 100, 500, 1000].forEach(t => setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, t));
+                // Die gestaffelten Timeouts wurden entfernt. Der ResizeObserver übernimmt das jetzt deterministisch.
             }
             if (hash === '#edit') {
                 initEditMap();
-                [10, 100, 500, 1000].forEach(t => setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, t));
+                // Die gestaffelten Timeouts wurden entfernt. Der ResizeObserver übernimmt das jetzt deterministisch.
             }
             if (hash === '#admin') loadGallery();
             if (hash === '#home') initSlideshow();
@@ -482,6 +479,19 @@
             return null; 
         }
 
+        // Robuste Lösung für Map-Resizing (ersetzt die Timeouts)
+        function observeMapResize(mapInstance, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container || !window.ResizeObserver) return;
+            const observer = new ResizeObserver(() => {
+                // Leaflet nur neu berechnen, wenn der Container auch reale Dimensionen hat
+                if (container.clientWidth > 0 && container.clientHeight > 0) {
+                    requestAnimationFrame(() => mapInstance.invalidateSize());
+                }
+            });
+            observer.observe(container);
+        }
+
         // --- 5. ÖFFENTLICHE KARTE ---
         let publicMarkers = [], publicLines = [], publicActiveMarker = null, mapLocCache = {};
         let currentSheetFlights = []; let currentSheetIcao = null;
@@ -493,6 +503,10 @@
             if (!publicMapInstance) {
                 publicMapInstance = L.map('publicMap', { zoomControl: false }).setView([50.0, 10.0], 5); L.control.zoom({ position: 'topleft' }).addTo(publicMapInstance); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(publicMapInstance);
                 publicMapInstance.on('click', () => { document.getElementById('bottomSheet').classList.add('translate-y-full'); resetMapHighlights(); });
+                
+                // Beobachter anhängen: Reagiert auf Menüklicks und Handy-Rotationen
+                observeMapResize(publicMapInstance, 'publicMap');
+                
                 onSnapshot(collection(db, "locations"), (snapshot) => {
                     publicMarkers.forEach(m => publicMapInstance.removeLayer(m)); publicMarkers = []; mapLocCache = {};
                     snapshot.forEach((doc) => {
@@ -586,7 +600,13 @@
 
         // --- 6. EDITOR ---
         function initEditMap() {
-            if (!editMapInstance) { editMapInstance = L.map('editMap').setView([50.0, 10.0], 5); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(editMapInstance); }
+            if (!editMapInstance) { 
+                editMapInstance = L.map('editMap').setView([50.0, 10.0], 5); 
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(editMapInstance); 
+                
+                // Beobachter für die Editor-Karte anhängen
+                observeMapResize(editMapInstance, 'editMap');
+            }
             if(!document.getElementById('date').value) document.getElementById('date').valueAsDate = new Date();
         }
 
