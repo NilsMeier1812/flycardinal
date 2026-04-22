@@ -200,8 +200,8 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-0"></div>
         <div class="relative z-10 flex flex-col items-center justify-end h-full px-4 pb-12 w-full">
             <div class="text-center space-y-6 w-full flex flex-col items-center">
-                <!-- Logo auf Mobile extrem verkleinert (h-8), auf Desktop bleibt es groß (md:h-20) -->
-                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="h-8 sm:h-12 md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+                <!-- Logo auf Mobile komplett ausgeblendet (hidden), ab Tablet wieder sichtbar (sm:block) -->
+                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="hidden sm:block sm:h-12 md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
                 <h2 class="text-sm md:text-base font-bold text-white/70 tracking-[0.3em] uppercase drop-shadow-md">Kontakt</h2>
                 <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 w-full">
                     <a href="mailto:cs@fly-cardinal.de" class="text-lg md:text-xl font-light text-white hover:text-blue-300 transition-colors drop-shadow-lg">cs@fly-cardinal.de</a>
@@ -259,8 +259,8 @@
     <!-- ========================================== -->
     <!-- VIEW: ÖFFENTLICHE KARTE (#map)             -->
     <!-- ========================================== -->
-    <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden w-full block" style="height: calc(100dvh - 64px);">
-        <!-- Eingebetteter Rahmen entfernt, Karte nutzt wieder 100% -->
+    <!-- FIX: 'block' Klasse entfernt, da sie flexbox der view-section stört -->
+    <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden w-full" style="height: calc(100dvh - 64px);">
         <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
         
         <div id="bottomSheet" class="absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[10] max-h-[85vh] flex flex-col">
@@ -369,13 +369,14 @@
             
             if (hash === '#map') {
                 initPublicMap();
-                setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 50);
-                setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 300);
+                // FIX: Kaskadierende Timeouts für Mobile Safari/Chrome. 
+                // Das Rendern des mobilen DOMs (speziell 100dvh) dauert oft länger, 
+                // wodurch Leaflet eine Größe von 0x0 annimmt und keine Pins/Kacheln zeichnet.
+                [10, 100, 500, 1000].forEach(t => setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, t));
             }
             if (hash === '#edit') {
                 initEditMap();
-                setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, 50);
-                setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, 300);
+                [10, 100, 500, 1000].forEach(t => setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, t));
             }
             if (hash === '#admin') loadGallery();
             if (hash === '#home') initSlideshow();
