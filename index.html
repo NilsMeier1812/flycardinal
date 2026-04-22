@@ -23,6 +23,8 @@
     </script>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Preload LCP Image -->
+    <link rel="preload" as="image" href="https://res.cloudinary.com/drpuhsspx/image/upload/f_auto,q_auto/v1773009359/qdhbivxbmlom1suc2xjc.jpg">
     <style>
         /* DVH behebt den Mobile-Safari Bug mit der URL-Leiste */
         body { font-family: 'Inter', sans-serif; background-color: #f9fafb; overflow-x: hidden; margin: 0; padding: 0; }
@@ -64,7 +66,8 @@
                 <!-- Logo -->
                 <div class="flex items-center">
                     <a href="#home" class="flex-shrink-0 flex items-center gap-2 group">
-                        <img id="img-logo" src="" alt="fly-cardinal Logo" class="h-10 w-auto transition-transform duration-300 group-hover:scale-105">
+                        <!-- Statische Bild-URL mit f_auto,q_auto -->
+                        <img id="img-logo" src="https://res.cloudinary.com/drpuhsspx/image/upload/f_auto,q_auto/v1773184165/Cardinal_Bird_sntrqv.png" alt="fly-cardinal Logo" class="h-10 w-auto transition-transform duration-300 group-hover:scale-105">
                         <span class="font-bold text-xl text-gray-900 tracking-tight">fly-cardinal</span>
                     </a>
                 </div>
@@ -119,7 +122,8 @@
     <section id="view-home" class="view-section active overflow-y-auto scroll-smooth">
         <header class="relative bg-gray-900 h-[45vh] md:h-[70vh] overflow-hidden flex items-center justify-center shrink-0">
             <div id="slideshow" class="absolute -top-[20%] left-0 w-full h-[140%] transform will-change-transform">
-                <img id="img-slide-fallback" src="" class="slide active">
+                <!-- Statische Bild-URL mit f_auto,q_auto -->
+                <img id="img-slide-fallback" src="https://res.cloudinary.com/drpuhsspx/image/upload/f_auto,q_auto/v1773009359/qdhbivxbmlom1suc2xjc.jpg" class="slide active">
                 <div class="absolute inset-0 bg-black/40 z-0"></div>
             </div>
             <div class="relative z-10 text-center px-4 w-full">
@@ -152,7 +156,8 @@
             <section class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
                 <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col h-full">
                     <div class="h-48 bg-gray-200 relative overflow-hidden">
-                        <img id="img-card-map" src="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <!-- Statische Bild-URL mit f_auto,q_auto -->
+                        <img id="img-card-map" src="https://res.cloudinary.com/drpuhsspx/image/upload/f_auto,q_auto/v1773184803/map-fly-cardina%C3%B6_ezuvvz.png" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                     </div>
                     <div class="p-6 flex-grow flex flex-col">
                         <h3 class="text-xl font-bold mb-2 text-gray-800">Flugkarte</h3>
@@ -164,7 +169,8 @@
                 
                 <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col h-full">
                     <div class="h-48 bg-gray-200 relative overflow-hidden">
-                        <img id="img-card-crew" src="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <!-- Statische Bild-URL mit f_auto,q_auto -->
+                        <img id="img-card-crew" src="https://res.cloudinary.com/drpuhsspx/image/upload/f_auto,q_auto/v1773508977/crew_cap_gmo167.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                     </div>
                     <div class="p-6 flex-grow flex flex-col">
                         <h3 class="text-xl font-bold mb-2 text-gray-800">Crew</h3>
@@ -176,7 +182,8 @@
                 
                 <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col h-full">
                     <div class="h-48 bg-gray-200 relative overflow-hidden">
-                        <img id="img-card-flieger" src="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <!-- Statische Bild-URL mit f_auto,q_auto -->
+                        <img id="img-card-flieger" src="https://res.cloudinary.com/drpuhsspx/image/upload/f_auto,q_auto/v1776864489/fbuzlwqxsoxfbsardxsm.jpg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                     </div>
                     <div class="p-6 flex-grow flex flex-col">
                         <h3 class="text-xl font-bold mb-2 text-gray-800">Galerie</h3>
@@ -192,11 +199,13 @@
 
     <!-- VIEW: CREW (#crew) -->
     <section id="view-crew" class="view-section relative" style="height: calc(100dvh - 64px);">
-        <div id="bg-crew" class="absolute inset-0 bg-cover bg-center z-0"></div>
+        <!-- Statisches Hintergrundbild via Style-Attribut gesetzt, inklusive Optimierung -->
+        <div id="bg-crew" class="absolute inset-0 bg-cover bg-center z-0" style="background-image: url('https://res.cloudinary.com/drpuhsspx/image/upload/f_auto,q_auto/v1773508979/uli_veste_fjhzui.png');"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-0"></div>
         <div class="relative z-10 flex flex-col items-center justify-end h-full px-4 pb-12 w-full">
             <div class="text-center space-y-6 w-full flex flex-col items-center">
-                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="hidden md:block md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+                <!-- Statische Bild-URL mit f_auto,q_auto -->
+                <img id="img-crew-logo" src="https://res.cloudinary.com/drpuhsspx/image/upload/f_auto,q_auto/v1773184165/Cardinal_Bird_sntrqv.png" alt="fly-cardinal Logo" class="hidden md:block md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
                 <h2 class="text-sm md:text-base font-bold text-white/70 tracking-[0.3em] uppercase drop-shadow-md">Kontakt</h2>
                 <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 w-full">
                     <a href="mailto:cs@fly-cardinal.de" class="text-lg md:text-xl font-light text-white hover:text-blue-300 transition-colors drop-shadow-lg">cs@fly-cardinal.de</a>
@@ -355,25 +364,14 @@
     <script src="https://unpkg.com/panzoom@9.4.3/dist/panzoom.min.js"></script>
     <script type="module">
 
-        const BILDER_KONFIGURATION = {
-            logo: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773184165/Cardinal_Bird_sntrqv.png",
-            slideshowFallback: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg",
-            cardMap: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773184803/map-fly-cardina%C3%B6_ezuvvz.png",
-            cardCrew: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508977/crew_cap_gmo167.jpg",
-            cardFlieger: "https://res.cloudinary.com/drpuhsspx/image/upload/v1776864489/fbuzlwqxsoxfbsardxsm.jpg",
-            crewHintergrund: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508979/uli_veste_fjhzui.png"
-        };
-
-        function ladeAlleBilder() {
-            document.getElementById('img-logo').src = BILDER_KONFIGURATION.logo;
-            document.getElementById('img-crew-logo').src = BILDER_KONFIGURATION.logo;
-            document.getElementById('img-slide-fallback').src = BILDER_KONFIGURATION.slideshowFallback;
-            document.getElementById('img-card-map').src = BILDER_KONFIGURATION.cardMap;
-            document.getElementById('img-card-crew').src = BILDER_KONFIGURATION.cardCrew;
-            document.getElementById('img-card-flieger').src = BILDER_KONFIGURATION.cardFlieger;
-            document.getElementById('bg-crew').style.backgroundImage = `url('${BILDER_KONFIGURATION.crewHintergrund}')`;
+        // Helper Funktion zur URL-Optimierung für dynamische Inhalte
+        function optimizeCloudinaryUrl(url) {
+            if (!url) return url;
+            // Falls das Bild schon optimiert ist, nichts ändern
+            if (url.includes('f_auto,q_auto')) return url;
+            // Füge die Parameter nach /upload/ ein
+            return url.replace('/upload/', '/upload/f_auto,q_auto/');
         }
-        ladeAlleBilder();
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -487,18 +485,35 @@
             try {
                 const snap = await getDocs(collection(db, "slideshow_images"));
                 const container = document.getElementById('slideshow');
+                // Das Fallback-Bild behalten wir bei, bis die Slideshow geladen ist
+                const fallbackImg = document.getElementById('img-slide-fallback');
+                
                 if (!snap.empty) {
-                    let html = '', isFirst = true;
-                    snap.forEach((doc) => { html += `<img src="${doc.data().url}" class="slide ${isFirst ? 'active' : ''}">`; isFirst = false; });
+                    let html = '';
+                    let isFirst = true;
+                    // Mische die Bilder, falls gewünscht, oder nehme sie, wie sie kommen
+                    snap.forEach((doc) => { 
+                        // Optimiere die URL vor dem Einfügen
+                        const optimizedUrl = optimizeCloudinaryUrl(doc.data().url);
+                        html += `<img src="${optimizedUrl}" class="slide ${isFirst ? 'active' : ''}">`; 
+                        isFirst = false; 
+                    });
                     container.innerHTML = html + '<div class="absolute inset-0 bg-black/40 z-0"></div>';
                 }
+                
                 clearInterval(slideshowInterval);
                 const slides = container.querySelectorAll('.slide');
                 if (slides.length > 1) {
                     let current = 0;
-                    slideshowInterval = setInterval(() => { slides[current].classList.remove('active'); current = (current + 1) % slides.length; slides[current].classList.add('active'); }, 5000);
+                    slideshowInterval = setInterval(() => { 
+                        slides[current].classList.remove('active'); 
+                        current = (current + 1) % slides.length; 
+                        slides[current].classList.add('active'); 
+                    }, 5000);
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.error("Fehler beim Laden der Slideshow:", e);
+            }
         }
 
         // --- 4. MAP HELPER ---
@@ -755,9 +770,12 @@
                 const container = document.getElementById(containerId); container.innerHTML = '';
                 if(snap.empty) { container.innerHTML = '<div class="text-gray-500 col-span-full">Keine Bilder.</div>'; return; }
                 snap.forEach(docSnap => {
-                    const data = docSnap.data(), div = document.createElement('div');
+                    const data = docSnap.data();
+                    const div = document.createElement('div');
+                    // Auch im Admin-Bereich Bilder optimiert ausgeben (spart Ladezeit für den Admin)
+                    const optimizedUrl = optimizeCloudinaryUrl(data.url);
                     div.className = "relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-100";
-                    div.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><button class="bg-red-600 text-white text-xs font-bold py-1 px-2 rounded" onclick="deleteImg('${docSnap.id}', '${collectionName}')">Entfernen</button></div>`;
+                    div.innerHTML = `<img src="${optimizedUrl}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><button class="bg-red-600 text-white text-xs font-bold py-1 px-2 rounded" onclick="deleteImg('${docSnap.id}', '${collectionName}')">Entfernen</button></div>`;
                     container.appendChild(div);
                 });
             };
@@ -778,9 +796,30 @@
                 snap.forEach(docSnap => {
                     const data = docSnap.data();
                     const div = document.createElement('div');
-                    div.className = "masonry-item";
-                    div.innerHTML = `<img src="${data.url}" loading="lazy" alt="Galerie Bild">`;
-                    div.addEventListener('click', () => openLightbox(data.url));
+                    // Bild-URL optimieren vor der Anzeige in der Galerie
+                    const optimizedUrl = optimizeCloudinaryUrl(data.url);
+                    
+                    // Skeleton Wrapper initialisieren
+                    div.className = "masonry-item relative bg-gray-200 animate-pulse min-h-[250px] rounded-lg";
+                    
+                    // Bild-Element sauber über DOM-API erstellen für onload-Event
+                    const img = document.createElement('img');
+                    img.src = optimizedUrl;
+                    img.loading = "lazy";
+                    img.alt = "Galerie Bild";
+                    // opacity-0 am Anfang, damit das Bild nicht hart aufpoppt, falls es schneller da ist als erwartet
+                    img.className = "w-full h-auto block transition-opacity duration-500 opacity-0 cursor-pointer";
+                    
+                    // Sobald das Bild geladen ist: Fade-in und Skeleton-Klassen entfernen
+                    img.onload = () => {
+                        img.classList.remove('opacity-0');
+                        div.classList.remove('animate-pulse', 'bg-gray-200', 'min-h-[250px]');
+                    };
+
+                    // Bei Klick in der Lightbox trotzdem das optimierte (oder nach Wahl das originale) Bild laden
+                    img.addEventListener('click', () => openLightbox(optimizedUrl, data.url));
+                    
+                    div.appendChild(img);
                     container.appendChild(div);
                 });
             });
@@ -790,9 +829,10 @@
         const lightboxImg = document.getElementById('lightboxImg');
         const lightboxDownload = document.getElementById('lightboxDownload');
         
-        function openLightbox(url) {
-            lightboxImg.src = url;
-            const downloadUrl = url.replace('/upload/', '/upload/fl_attachment/');
+        function openLightbox(displayUrl, originalUrl) {
+            lightboxImg.src = displayUrl;
+            // Der Download-Link bekommt das Attachment-Flag, basierend auf der Original-URL
+            const downloadUrl = originalUrl.replace('/upload/', '/upload/fl_attachment/');
             lightboxDownload.href = downloadUrl;
             lightbox.classList.remove('hidden');
             lightbox.classList.add('flex');
