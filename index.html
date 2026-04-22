@@ -45,6 +45,14 @@
         .input-field { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; outline: none; transition: border-color 0.2s; }
         .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
         .label { display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.25rem; }
+
+        /* Masonry Gallery & Lightbox */
+        .masonry-gallery { column-count: 1; column-gap: 1rem; }
+        @media (min-width: 640px) { .masonry-gallery { column-count: 2; } }
+        @media (min-width: 1024px) { .masonry-gallery { column-count: 3; } }
+        .masonry-item { break-inside: avoid; margin-bottom: 1rem; display: inline-block; width: 100%; cursor: pointer; border-radius: 0.5rem; overflow: hidden; transform: translateZ(0); }
+        .masonry-item img { width: 100%; height: auto; display: block; transition: transform 0.3s ease; }
+        .masonry-item:hover img { transform: scale(1.05); }
     </style>
 </head>
 <body class="flex flex-col min-h-[100dvh]">
@@ -66,7 +74,7 @@
                     <a href="#home" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Start</a>
                     <a href="#map" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Flugkarte</a>
                     <a href="#crew" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Crew</a>
-                    <a href="#flieger" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Der Flieger</a>
+                    <a href="#bilder" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Bilder</a>
                     
                     <!-- Admin Links -->
                     <div id="authMenu" class="hidden items-center space-x-4 border-l pl-4 border-gray-300/50">
@@ -95,7 +103,7 @@
             <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Start</a>
             <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Flugkarte</a>
             <a href="#crew" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Crew</a>
-            <a href="#flieger" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Der Flieger</a>
+            <a href="#bilder" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Bilder</a>
             
             <div id="mobileAuthMenu" class="hidden flex-col bg-gray-50/80">
                 <a href="#edit" class="px-6 py-4 text-green-600 font-bold border-b border-gray-200/50">+ Flug eintragen</a>
@@ -171,9 +179,9 @@
                         <img id="img-card-flieger" src="" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                     </div>
                     <div class="p-6 flex-grow flex flex-col">
-                        <h3 class="text-xl font-bold mb-2 text-gray-800">Der Flieger</h3>
-                        <a href="#flieger" class="mt-auto text-blue-600 font-semibold flex items-center gap-1 group-hover:text-blue-700 transition-colors">
-                            Flieger entdecken <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                        <h3 class="text-xl font-bold mb-2 text-gray-800">Galerie</h3>
+                        <a href="#bilder" class="mt-auto text-blue-600 font-semibold flex items-center gap-1 group-hover:text-blue-700 transition-colors">
+                            Bilder ansehen <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
                         </a>
                     </div>
                 </div>
@@ -203,43 +211,29 @@
         </div>
     </section>
 
-    <!-- VIEW: DER FLIEGER (#flieger) -->
-    <section id="view-flieger" class="view-section bg-white overflow-y-auto" style="height: calc(100dvh - 64px);">
-        <div class="w-full h-64 md:h-96 relative shrink-0">
-            <img id="img-flieger-hero" src="" class="w-full h-full object-cover">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-            <h1 class="absolute bottom-6 left-6 md:left-12 text-4xl md:text-5xl font-bold text-white drop-shadow-lg">Cessna 177 Cardinal <span class="text-2xl md:text-3xl text-blue-300 font-medium block mt-2">D-EJCO</span></h1>
-        </div>
-        
-        <div class="max-w-5xl mx-auto px-4 py-12 space-y-12">
-            <div class="flex flex-col lg:flex-row gap-8">
-                <div class="lg:w-2/3 text-lg text-gray-700 leading-relaxed bg-gray-50 p-6 md:p-10 rounded-2xl border border-gray-100 shadow-sm">
-                    <p class="mb-4">Die Cessna 177 „Cardinal“ ist ein ganz besonderes Flugzeug in der Cessna-Familie. Entworfen in den späten 1960er Jahren, besticht sie durch ihr elegantes, modernes Design. Das auffälligste Merkmal: Das Fehlen der ansonsten typischen Flügelstreben (freitragender Cantilever-Flügel). Das sorgt nicht nur für eine schnittigere Optik, sondern vor allem für eine unvergleichliche, ungestörte Rundumsicht aus dem Cockpit.</p>
-                    <p>Unsere <strong>D-EJCO</strong> bietet Piloten und Passagieren einen ungewöhnlich geräumigen Innenraum. Durch die im Vergleich zur Cessna 172 weiter hinten positionierten Tragflächen und die großen, weit öffnenden Türen ist der Einstieg deutlich bequemer. Ob für ausgedehnte Reiseflüge oder entspannte Runden über die Heimat – die Cardinal ist ein fantastischer Tourer, der aerodynamische Eleganz mit hohem Flugkomfort verbindet.</p>
-                </div>
-                
-                <div class="lg:w-1/3 bg-blue-50 p-6 md:p-8 rounded-2xl border border-blue-100 shadow-sm flex flex-col justify-center">
-                    <h3 class="text-xl font-bold text-blue-900 mb-6 border-b border-blue-200 pb-2">Steckbrief</h3>
-                    <ul class="space-y-4 text-blue-800">
-                        <li class="flex justify-between items-center"><span class="font-semibold">Typ:</span><span class="text-right">Cessna 177</span></li>
-                        <li class="flex justify-between items-center"><span class="font-semibold">Kennung:</span><span class="text-right font-mono bg-blue-200 px-2 py-1 rounded">D-EJCO</span></li>
-                        <li class="flex justify-between items-center"><span class="font-semibold">Sitzplätze:</span><span class="text-right">1 Pilot + 3 Passagiere</span></li>
-                        <li class="flex justify-between items-center"><span class="font-semibold">Besonderheit:</span><span class="text-right">Freitragende Flügel</span></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="rounded-2xl shadow-md overflow-hidden h-64 border border-gray-100">
-                    <img id="img-flieger-d1" src="" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
-                </div>
-                <div class="rounded-2xl shadow-md overflow-hidden h-64 border border-gray-100">
-                    <img id="img-flieger-d2" src="" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
-                </div>
+    <!-- VIEW: BILDER GALERIE (#bilder) -->
+    <section id="view-bilder" class="view-section bg-gray-50 overflow-y-auto" style="height: calc(100dvh - 64px);">
+        <div class="max-w-7xl mx-auto px-4 py-8 w-full">
+            <h2 class="text-3xl font-bold text-gray-900 mb-8 text-center">Bildergalerie</h2>
+            <div id="publicGallery" class="masonry-gallery">
+                <!-- Bilder werden dynamisch geladen -->
             </div>
         </div>
         <footer class="bg-gray-900 text-gray-400 py-12 mt-auto shrink-0 w-full"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
     </section>
+
+    <!-- LIGHTBOX MODAL -->
+    <div id="lightbox" class="fixed inset-0 bg-black/95 z-[100000] hidden flex-col items-center justify-center p-4">
+        <div class="absolute top-4 right-4 flex gap-4">
+            <a id="lightboxDownload" href="#" download class="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full transition-colors" title="Herunterladen">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            </a>
+            <button id="lightboxClose" class="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full transition-colors" title="Schließen">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <img id="lightboxImg" src="" class="max-w-full max-h-[85vh] object-contain rounded shadow-2xl">
+    </div>
 
     <!-- VIEW: ÖFFENTLICHE KARTE (#map) -->
     <!-- FIX: Die Tailwind-Klasse 'block' wurde entfernt, da sie flex-Layouts in inaktiven Zuständen zerschießen kann -->
@@ -307,17 +301,35 @@
             <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-2 sm:mt-4">
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">fly-cardinal Admin Dashboard</h2>
                 
-                <div class="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
-                    <h3 class="font-bold text-gray-700 mb-2">Slideshow Bilder hochladen</h3>
-                    <input type="file" id="imageUpload" accept="image/*" class="hidden">
-                    <label for="imageUpload" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow inline-block mb-3">Bild auswählen</label>
-                    <p id="fileName" class="text-sm text-gray-500 mb-4 truncate w-full">Kein Bild ausgewählt</p>
-                    <button id="uploadCloudinaryBtn" class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow disabled:opacity-50" disabled>Hochladen</button>
-                    <div id="uploadStatus" class="mt-3 font-semibold text-sm h-5"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Slideshow Upload -->
+                    <div class="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 text-center flex flex-col h-full">
+                        <h3 class="font-bold text-gray-700 mb-2">Slideshow Bilder</h3>
+                        <input type="file" id="imageUploadSlideshow" accept="image/*" class="hidden">
+                        <label for="imageUploadSlideshow" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow inline-block mb-3 mt-auto w-max mx-auto">Bild auswählen</label>
+                        <p id="fileNameSlideshow" class="text-sm text-gray-500 mb-4 truncate w-full">Kein Bild ausgewählt</p>
+                        <button id="btnUploadSlideshow" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow disabled:opacity-50" disabled>Slideshow Upload</button>
+                        <div id="statusSlideshow" class="mt-3 font-semibold text-sm h-5"></div>
+                    </div>
+
+                    <!-- Galerie Upload -->
+                    <div class="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 text-center flex flex-col h-full">
+                        <h3 class="font-bold text-gray-700 mb-2">Galerie Bilder</h3>
+                        <input type="file" id="imageUploadGallery" accept="image/*" class="hidden">
+                        <label for="imageUploadGallery" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow inline-block mb-3 mt-auto w-max mx-auto">Bild auswählen</label>
+                        <p id="fileNameGallery" class="text-sm text-gray-500 mb-4 truncate w-full">Kein Bild ausgewählt</p>
+                        <button id="btnUploadGallery" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow disabled:opacity-50" disabled>Galerie Upload</button>
+                        <div id="statusGallery" class="mt-3 font-semibold text-sm h-5"></div>
+                    </div>
                 </div>
 
-                <h3 class="font-bold text-gray-700 mb-3">Aktuelle Bilder in der Slideshow:</h3>
-                <div id="imagesGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-12"></div>
+                <div class="mb-8">
+                    <h3 class="font-bold text-gray-700 mb-3">Aktuelle Bilder in der Slideshow:</h3>
+                    <div id="slideshowAdminGallery" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 mb-6"></div>
+                    
+                    <h3 class="font-bold text-gray-700 mb-3 pt-4 border-t border-gray-200">Aktuelle Bilder in der Galerie:</h3>
+                    <div id="galleryAdminGallery" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3"></div>
+                </div>
                 
                 <hr class="border-gray-200 mb-8">
 
@@ -341,11 +353,8 @@
             slideshowFallback: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg",
             cardMap: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773184803/map-fly-cardina%C3%B6_ezuvvz.png",
             cardCrew: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508977/crew_cap_gmo167.jpg",
-            cardFlieger: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773183503/tph6mupwfye94zatsgcb.jpg",
-            crewHintergrund: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508979/uli_veste_fjhzui.png",
-            fliegerHero: "https://images.unsplash.com/photo-1583072046894-370cc3672013?q=80&w=2000&auto=format&fit=crop",
-            fliegerDetail1: "https://images.unsplash.com/photo-1605367622831-29cf63b2f9f1?q=80&w=800&auto=format&fit=crop",
-            fliegerDetail2: "https://images.unsplash.com/photo-1540962351504-03099e0a754b?q=80&w=800&auto=format&fit=crop"
+            cardFlieger: "https://images.unsplash.com/photo-1540962351504-03099e0a754b?q=80&w=800&auto=format&fit=crop",
+            crewHintergrund: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508979/uli_veste_fjhzui.png"
         };
 
         function ladeAlleBilder() {
@@ -356,9 +365,6 @@
             document.getElementById('img-card-crew').src = BILDER_KONFIGURATION.cardCrew;
             document.getElementById('img-card-flieger').src = BILDER_KONFIGURATION.cardFlieger;
             document.getElementById('bg-crew').style.backgroundImage = `url('${BILDER_KONFIGURATION.crewHintergrund}')`;
-            document.getElementById('img-flieger-hero').src = BILDER_KONFIGURATION.fliegerHero;
-            document.getElementById('img-flieger-d1').src = BILDER_KONFIGURATION.fliegerDetail1;
-            document.getElementById('img-flieger-d2').src = BILDER_KONFIGURATION.fliegerDetail2;
         }
         ladeAlleBilder();
 
@@ -423,8 +429,9 @@
                 initEditMap();
                 [10, 50, 200, 500].forEach(t => setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, t));
             }
-            if (hash === '#admin') loadGallery();
+            if (hash === '#admin') loadAdminGalleries();
             if (hash === '#home') initSlideshow();
+            if (hash === '#bilder') loadPublicGallery();
         }
         window.addEventListener('hashchange', handleRouting);
 
@@ -688,33 +695,99 @@
         });
 
         // --- 7. ADMIN: UPLOAD & CSV IMPORT ---
-        let adminFile = null;
-        document.getElementById('imageUpload').addEventListener('change', (e) => { if(e.target.files.length > 0) { adminFile = e.target.files[0]; document.getElementById('fileName').textContent = adminFile.name; document.getElementById('uploadCloudinaryBtn').disabled = false; }});
-        document.getElementById('uploadCloudinaryBtn').addEventListener('click', async () => {
-            if(!adminFile) return; const btn = document.getElementById('uploadCloudinaryBtn'), stat = document.getElementById('uploadStatus');
+        function handleImageUploadUI(inputId, nameId, btnId) {
+            let file = null;
+            document.getElementById(inputId).addEventListener('change', (e) => { 
+                if(e.target.files.length > 0) { 
+                    file = e.target.files[0]; 
+                    document.getElementById(nameId).textContent = file.name; 
+                    document.getElementById(btnId).disabled = false; 
+                }
+            });
+            return () => file;
+        }
+
+        const getSlideshowFile = handleImageUploadUI('imageUploadSlideshow', 'fileNameSlideshow', 'btnUploadSlideshow');
+        const getGalleryFile = handleImageUploadUI('imageUploadGallery', 'fileNameGallery', 'btnUploadGallery');
+
+        async function performUpload(file, collectionName, btnId, statusId, inputId, nameId) {
+            if(!file) return; 
+            const btn = document.getElementById(btnId), stat = document.getElementById(statusId);
             btn.disabled=true; stat.textContent="Lädt hoch..."; stat.className="text-blue-500 mt-3 text-center text-sm font-semibold animate-pulse";
             try {
-                const fd = new FormData(); fd.append("file", adminFile); fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+                const fd = new FormData(); fd.append("file", file); fd.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
                 if(!res.ok) throw new Error("Upload Failed"); const data = await res.json();
-                await addDoc(collection(db, "slideshow_images"), { url: data.secure_url, cloudinaryId: data.public_id, uploadedAt: new Date() });
-                stat.textContent="Erfolgreich!"; stat.className="text-green-500 mt-3 text-center text-sm font-semibold"; adminFile=null; document.getElementById('imageUpload').value=''; document.getElementById('fileName').textContent="Kein Bild ausgewählt";
-            } catch(e) { stat.textContent="Upload Fehler!"; stat.className="text-red-500 mt-3 text-center text-sm font-semibold"; } finally { setTimeout(() => {if(stat.textContent==="Erfolgreich!")stat.textContent=""},3000); }
-        });
+                await addDoc(collection(db, collectionName), { url: data.secure_url, cloudinaryId: data.public_id, uploadedAt: new Date() });
+                stat.textContent="Erfolgreich!"; stat.className="text-green-500 mt-3 text-center text-sm font-semibold"; 
+                document.getElementById(inputId).value=''; document.getElementById(nameId).textContent="Kein Bild ausgewählt";
+            } catch(e) { 
+                stat.textContent="Upload Fehler!"; stat.className="text-red-500 mt-3 text-center text-sm font-semibold"; 
+            } finally { 
+                setTimeout(() => {if(stat.textContent==="Erfolgreich!")stat.textContent=""},3000); 
+            }
+        }
 
-        function loadGallery() {
-            onSnapshot(collection(db, "slideshow_images"), (snap) => {
-                const gal = document.getElementById('imagesGallery'); gal.innerHTML = '';
-                if(snap.empty) { gal.innerHTML = '<div class="text-gray-500 col-span-3">Keine Bilder.</div>'; return; }
+        document.getElementById('btnUploadSlideshow').addEventListener('click', () => performUpload(getSlideshowFile(), "slideshow_images", 'btnUploadSlideshow', 'statusSlideshow', 'imageUploadSlideshow', 'fileNameSlideshow'));
+        document.getElementById('btnUploadGallery').addEventListener('click', () => performUpload(getGalleryFile(), "gallery_images", 'btnUploadGallery', 'statusGallery', 'imageUploadGallery', 'fileNameGallery'));
+
+        function loadAdminGalleries() {
+            const renderAdminImages = (snap, containerId, collectionName) => {
+                const container = document.getElementById(containerId); container.innerHTML = '';
+                if(snap.empty) { container.innerHTML = '<div class="text-gray-500 col-span-full">Keine Bilder.</div>'; return; }
                 snap.forEach(docSnap => {
                     const data = docSnap.data(), div = document.createElement('div');
-                    div.className = "relative group rounded-xl overflow-hidden border border-gray-200 aspect-video bg-gray-100";
-                    div.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><button class="bg-red-600 text-white font-bold py-2 px-4 rounded" onclick="deleteImg('${docSnap.id}')">Entfernen</button></div>`;
-                    gal.appendChild(div);
+                    div.className = "relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-100";
+                    div.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><button class="bg-red-600 text-white text-xs font-bold py-1 px-2 rounded" onclick="deleteImg('${docSnap.id}', '${collectionName}')">Entfernen</button></div>`;
+                    container.appendChild(div);
+                });
+            };
+            onSnapshot(collection(db, "slideshow_images"), (snap) => renderAdminImages(snap, 'slideshowAdminGallery', 'slideshow_images'));
+            onSnapshot(collection(db, "gallery_images"), (snap) => renderAdminImages(snap, 'galleryAdminGallery', 'gallery_images'));
+        }
+        window.deleteImg = async (id, collectionName) => { if(confirm("Bild wirklich löschen?")) { try { await deleteDoc(doc(db, collectionName, id)); } catch(e){} } };
+
+        // --- 8. PUBLIC GALLERY & LIGHTBOX ---
+        let galleryUnsubscribe = null;
+        function loadPublicGallery() {
+            if (galleryUnsubscribe) return; 
+            const container = document.getElementById('publicGallery');
+            galleryUnsubscribe = onSnapshot(collection(db, "gallery_images"), (snap) => {
+                container.innerHTML = '';
+                if(snap.empty) { container.innerHTML = '<div class="text-gray-500 text-center w-full block mt-8">Noch keine Bilder vorhanden.</div>'; return; }
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const div = document.createElement('div');
+                    div.className = "masonry-item";
+                    div.innerHTML = `<img src="${data.url}" loading="lazy" alt="Galerie Bild">`;
+                    div.addEventListener('click', () => openLightbox(data.url));
+                    container.appendChild(div);
                 });
             });
         }
-        window.deleteImg = async (id) => { if(confirm("Bild von der Startseite entfernen?")) { try { await deleteDoc(doc(db, "slideshow_images", id)); } catch(e){} } };
+
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxDownload = document.getElementById('lightboxDownload');
+        
+        function openLightbox(url) {
+            lightboxImg.src = url;
+            const downloadUrl = url.replace('/upload/', '/upload/fl_attachment/');
+            lightboxDownload.href = downloadUrl;
+            lightbox.classList.remove('hidden');
+            lightbox.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            lightbox.classList.add('hidden');
+            lightbox.classList.remove('flex');
+            document.body.style.overflow = '';
+            lightboxImg.src = '';
+        }
+
+        document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', (e) => { if(e.target === lightbox) closeLightbox(); });
 
         document.getElementById('runImportBtn').addEventListener('click', async () => {
             const csvText = document.getElementById('importCsvData').value; 
