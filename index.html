@@ -6,19 +6,6 @@
     <title>fly-cardinal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        cardinal: {
-                            50: '#fdf3f3',100: '#fce4e5',200: '#f8cacc',300: '#f3a2a6',400: '#ec6a71',500: '#e53e45',600: '#d52226',700: '#b2191d',800: '#94171a',900: '#7a181a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -47,7 +34,7 @@
 </head>
 <body class="flex flex-col min-h-[100dvh]">
 
-    <!-- GEMEINSAME NAVIGATION (Überarbeitet mit Glassmorphism) -->
+    <!-- GEMEINSAME NAVIGATION -->
     <nav class="sticky top-0 z-[10000] w-full h-[64px] bg-white/70 backdrop-blur-md shadow-sm border-b border-gray-200/50 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -61,10 +48,10 @@
                 
                 <!-- Desktop Menü -->
                 <div class="hidden md:flex md:items-center md:space-x-6 lg:space-x-8">
-                    <a href="#home" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Start</a>
-                    <a href="#map" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Flugkarte</a>
-                    <a href="#crew" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Crew</a>
-                    <a href="#flieger" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Der Flieger</a>
+                    <a href="#home" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Start</a>
+                    <a href="#map" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Flugkarte</a>
+                    <a href="#crew" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Crew</a>
+                    <a href="#flieger" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Der Flieger</a>
                     
                     <!-- Admin Links -->
                     <div id="authMenu" class="hidden items-center space-x-4 border-l pl-4 border-gray-300/50">
@@ -88,12 +75,12 @@
             </div>
         </div>
 
-        <!-- Mobile Menü Container (Glassmorphism) -->
+        <!-- Mobile Menü Container -->
         <div id="mobileMenu" class="hidden flex-col md:hidden bg-white/95 backdrop-blur-md absolute w-full left-0 top-[64px] shadow-xl border-t border-gray-100/50 z-[9999]">
-            <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Start</a>
-            <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Flugkarte</a>
-            <a href="#crew" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Crew</a>
-            <a href="#flieger" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Der Flieger</a>
+            <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Start</a>
+            <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Flugkarte</a>
+            <a href="#crew" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Crew</a>
+            <a href="#flieger" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Der Flieger</a>
             
             <div id="mobileAuthMenu" class="hidden flex-col bg-gray-50/80">
                 <a href="#edit" class="px-6 py-4 text-green-600 font-bold border-b border-gray-200/50">+ Flug eintragen</a>
@@ -101,18 +88,14 @@
                 <button id="mobileNavLogoutBtn" class="text-left px-6 py-4 text-red-600 font-bold hover:bg-red-50/50">Abmelden</button>
             </div>
 
-            <a href="#login" id="mobileNavLoginBtn" class="px-6 py-4 text-cardinal-600 font-bold bg-cardinal-50/80 hover:bg-cardinal-100">Mitglied Login</a>
+            <a href="#login" id="mobileNavLoginBtn" class="px-6 py-4 text-blue-600 font-bold bg-blue-50/80 hover:bg-blue-100">Mitglied Login</a>
         </div>
     </nav>
 
-    <!-- ========================================== -->
-    <!-- VIEW: STARTSEITE (#home)                   -->
-    <!-- ========================================== -->
+    <!-- VIEW: STARTSEITE (#home) -->
     <section id="view-home" class="view-section active overflow-y-auto scroll-smooth">
         <header class="relative bg-gray-900 h-[60vh] md:h-[70vh] overflow-hidden flex items-center justify-center shrink-0">
-            <!-- Das Slideshow-Div wird via JavaScript für den Parallax-Effekt verschoben -->
-            <!-- FIX: Container ist jetzt 140% hoch und nach oben versetzt, damit beim Parallax keine Lücke entsteht -->
-            <div id="slideshow" class="absolute -top-[20%] left-0 w-full h-[140%] transform will-change-transform">
+            <div id="slideshow" class="absolute inset-0 w-full h-full transform will-change-transform">
                 <img id="img-slide-fallback" src="" class="slide active">
                 <div class="absolute inset-0 bg-black/40 z-0"></div>
             </div>
@@ -120,24 +103,18 @@
                 <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-4 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">fly-cardinal</h1>
                 
                 <div class="mt-8 md:mt-10 flex justify-center w-full px-2">
-                    <!-- Solider, aber kleinerer CTA-Button -->
                     <a href="#map" class="group flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-2 sm:py-3 bg-white rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95 cursor-pointer max-w-full">
-                        
-                        <!-- Flugzeug-Icon in einem soliden farbigen Kreis -->
-                        <div class="relative flex items-center justify-center shrink-0 bg-cardinal-50 text-cardinal-600 p-2.5 sm:p-3 rounded-full group-hover:bg-cardinal-600 group-hover:text-white transition-colors duration-300">
-                            <!-- Nur vertikale Animation -->
+                        <div class="relative flex items-center justify-center shrink-0 bg-blue-50 text-blue-600 p-2.5 sm:p-3 rounded-full group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:-translate-y-1.5" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
                             </svg>
                         </div>
-                        
                         <div class="flex flex-col text-left overflow-hidden pr-2 sm:pr-4">
                             <span class="text-lg sm:text-xl font-bold tracking-tight text-gray-900 truncate">Interaktive Karte</span>
-                            <span class="text-[10px] sm:text-xs text-gray-500 font-medium group-hover:text-cardinal-600 transition-colors truncate">Flüge & Routen ansehen &rarr;</span>
+                            <span class="text-[10px] sm:text-xs text-gray-500 font-medium group-hover:text-blue-600 transition-colors truncate">Flüge & Routen ansehen &rarr;</span>
                         </div>
                     </a>
                 </div>
-
             </div>
         </header>
 
@@ -145,12 +122,10 @@
             <section class="text-center max-w-3xl mx-auto">
                 <h2 class="text-3xl font-bold text-gray-900 mb-6 relative inline-block">
                     About
-                    <!-- Dekoratives Element -->
                     <span class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-blue-500 rounded-full"></span>
                 </h2>
             </section>
             
-            <!-- Cards mit modernisierten Hover-Effekten -->
             <section class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
                 <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col h-full">
                     <div class="h-48 bg-gray-200 relative overflow-hidden">
@@ -192,16 +167,13 @@
         <footer class="bg-gray-900 text-gray-400 py-12 mt-auto shrink-0 w-full"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VIEW: CREW (MINIMALISTISCH) (#crew)        -->
-    <!-- ========================================== -->
+    <!-- VIEW: CREW (#crew) -->
     <section id="view-crew" class="view-section relative" style="height: calc(100dvh - 64px);">
         <div id="bg-crew" class="absolute inset-0 bg-cover bg-center z-0"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-0"></div>
         <div class="relative z-10 flex flex-col items-center justify-end h-full px-4 pb-12 w-full">
             <div class="text-center space-y-6 w-full flex flex-col items-center">
-                <!-- Logo auf Mobile komplett ausgeblendet, nur ab Desktop (md) sichtbar -->
-                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="hidden md:block md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="h-16 md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
                 <h2 class="text-sm md:text-base font-bold text-white/70 tracking-[0.3em] uppercase drop-shadow-md">Kontakt</h2>
                 <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 w-full">
                     <a href="mailto:cs@fly-cardinal.de" class="text-lg md:text-xl font-light text-white hover:text-blue-300 transition-colors drop-shadow-lg">cs@fly-cardinal.de</a>
@@ -216,9 +188,7 @@
         </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VIEW: DER FLIEGER (#flieger)               -->
-    <!-- ========================================== -->
+    <!-- VIEW: DER FLIEGER (#flieger) -->
     <section id="view-flieger" class="view-section bg-white overflow-y-auto" style="height: calc(100dvh - 64px);">
         <div class="w-full h-64 md:h-96 relative shrink-0">
             <img id="img-flieger-hero" src="" class="w-full h-full object-cover">
@@ -256,10 +226,8 @@
         <footer class="bg-gray-900 text-gray-400 py-12 mt-auto shrink-0 w-full"><div class="max-w-7xl mx-auto px-4 text-center"><p>&copy; 2026 fly-cardinal. Alle Rechte vorbehalten.</p></div></footer>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VIEW: ÖFFENTLICHE KARTE (#map)             -->
-    <!-- ========================================== -->
-    <!-- FIX: '!block' Hack entfernt. Der ResizeObserver löst das Flexbox-Problem jetzt sauber. -->
+    <!-- VIEW: ÖFFENTLICHE KARTE (#map) -->
+    <!-- FIX: Die Tailwind-Klasse 'block' wurde entfernt, da sie flex-Layouts in inaktiven Zuständen zerschießen kann -->
     <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden w-full" style="height: calc(100dvh - 64px);">
         <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
         
@@ -278,11 +246,78 @@
         </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VIEW: LOGIN (#login)                       -->
-    <!-- ========================================== -->
-    <!-- SCRIPTE & LOGIK                            -->
-    <!-- ========================================== -->
+    <!-- VIEW: LOGIN (#login) -->
+    <section id="view-login" class="view-section items-center justify-center bg-gray-100 px-4" style="height: calc(100dvh - 64px);">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800">Mitglieds-Login</h3>
+            <input type="text" id="loginUsername" placeholder="Benutzername" class="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required>
+            <input type="password" id="loginPassword" placeholder="Passwort" class="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required>
+            
+            <button id="actionLoginBtn" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg transition-colors">Einloggen</button>
+            <div class="my-4 border-t border-gray-200 relative"><span class="absolute top-[-10px] left-1/2 transform -translate-x-1/2 bg-white px-2 text-gray-400 text-sm">oder</span></div>
+            <button id="actionGoogleBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors">Mit Google anmelden</button>
+            <div id="loginErrorMsg" class="text-red-500 mt-4 text-sm font-semibold"></div>
+        </div>
+    </section>
+
+    <!-- VIEW: FLUG EINTRAGEN (#edit) -->
+    <section id="view-edit" class="view-section p-4 flex-col md:flex-row gap-4 bg-gray-100 overflow-y-auto" style="height: calc(100dvh - 64px);">
+        <div class="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-md flex flex-col h-auto md:h-full overflow-y-auto z-10">
+            <h3 class="text-xl font-bold text-gray-800 mb-6 shrink-0">Neuen Flug eintragen</h3>
+            <div class="space-y-4 flex-grow">
+                <div><label class="label">Start (ICAO)</label><input type="text" id="fromIcao" class="input-field uppercase" maxlength="4" required><div id="fromResult" class="text-xs mt-1 h-4"></div></div>
+                <div><label class="label">Ziel (ICAO)</label><input type="text" id="toIcao" class="input-field uppercase" maxlength="4" required><div id="toResult" class="text-xs mt-1 h-4"></div></div>
+                <div class="grid grid-cols-1 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div><label class="label">Datum</label><input type="date" id="date" class="input-field bg-white" required></div>
+                    <div class="flex gap-4">
+                        <div class="w-1/2"><label class="label">Startzeit</label><input type="time" id="startTime" class="input-field bg-white"></div>
+                        <div class="w-1/2"><label class="label">Landezeit</label><input type="time" id="endTime" class="input-field bg-white"></div>
+                    </div>
+                </div>
+                <div><label class="label">Notizen</label><textarea id="notes" rows="2" class="input-field resize-none"></textarea></div>
+            </div>
+            <div class="mt-6 shrink-0">
+                <button id="saveFlightBtn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow disabled:opacity-50">Speichern</button>
+                <div id="saveFlightStatus" class="text-center text-sm font-semibold h-5 mt-2"></div>
+            </div>
+        </div>
+        <div class="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[300px] md:min-h-[400px] relative w-full z-0">
+            <div id="editMap" class="w-full h-full absolute inset-0 z-0"></div>
+        </div>
+    </section>
+
+    <!-- VIEW: ADMIN DASHBOARD (#admin) -->
+    <section id="view-admin" class="view-section p-4 bg-gray-100 overflow-y-auto">
+        <div class="max-w-5xl mx-auto w-full">
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-2 sm:mt-4">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">fly-cardinal Admin Dashboard</h2>
+                
+                <div class="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
+                    <h3 class="font-bold text-gray-700 mb-2">Slideshow Bilder hochladen</h3>
+                    <input type="file" id="imageUpload" accept="image/*" class="hidden">
+                    <label for="imageUpload" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow inline-block mb-3">Bild auswählen</label>
+                    <p id="fileName" class="text-sm text-gray-500 mb-4 truncate w-full">Kein Bild ausgewählt</p>
+                    <button id="uploadCloudinaryBtn" class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow disabled:opacity-50" disabled>Hochladen</button>
+                    <div id="uploadStatus" class="mt-3 font-semibold text-sm h-5"></div>
+                </div>
+
+                <h3 class="font-bold text-gray-700 mb-3">Aktuelle Bilder in der Slideshow:</h3>
+                <div id="imagesGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-12"></div>
+                
+                <hr class="border-gray-200 mb-8">
+
+                <div class="bg-blue-50 p-4 sm:p-6 rounded-xl border border-blue-200">
+                    <h3 class="font-bold text-blue-900 mb-2 text-lg sm:text-xl">CSV Massen-Import (Flüge)</h3>
+                    <p class="text-xs sm:text-sm text-blue-700 mb-4">Format: <code class="bg-blue-100 px-1 rounded break-all">Datum,Wer ist geflogen,Start,Landung,Start,Landung</code></p>
+                    <textarea id="importCsvData" rows="6" class="w-full p-3 border border-blue-300 rounded-lg outline-none focus:border-blue-500 mb-4 font-mono text-xs sm:text-sm" placeholder="Füge hier deine Zeilen ein..."></textarea>
+                    <button id="runImportBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-colors disabled:opacity-50">Daten analysieren & importieren</button>
+                    <div id="importStatus" class="mt-3 font-semibold text-sm"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SCRIPTE & LOGIK -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
 
@@ -293,9 +328,9 @@
             cardCrew: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508977/crew_cap_gmo167.jpg",
             cardFlieger: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773183503/tph6mupwfye94zatsgcb.jpg",
             crewHintergrund: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773508979/uli_veste_fjhzui.png",
-            fliegerHero: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg",
-            fliegerDetail1: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg",
-            fliegerDetail2: "https://res.cloudinary.com/drpuhsspx/image/upload/v1773009359/qdhbivxbmlom1suc2xjc.jpg"
+            fliegerHero: "https://images.unsplash.com/photo-1583072046894-370cc3672013?q=80&w=2000&auto=format&fit=crop",
+            fliegerDetail1: "https://images.unsplash.com/photo-1605367622831-29cf63b2f9f1?q=80&w=800&auto=format&fit=crop",
+            fliegerDetail2: "https://images.unsplash.com/photo-1540962351504-03099e0a754b?q=80&w=800&auto=format&fit=crop"
         };
 
         function ladeAlleBilder() {
@@ -345,14 +380,10 @@
         const viewHome = document.getElementById('view-home');
         const slideshowContainer = document.getElementById('slideshow');
         
-        // FIX: Event Listener muss ans window gehängt werden, da der Body das Scrollen übernimmt
-        window.addEventListener('scroll', () => {
-            // Nur berechnen, wenn die Startseite auch aktiv ist (Performance-Schutz)
-            if (viewHome.classList.contains('active')) {
-                const scrollPos = window.scrollY || document.documentElement.scrollTop;
-                if (scrollPos < window.innerHeight) {
-                    slideshowContainer.style.transform = `translateY(${scrollPos * 0.4}px)`;
-                }
+        viewHome.addEventListener('scroll', () => {
+            const scrollPos = viewHome.scrollTop;
+            if (scrollPos < window.innerHeight) {
+                slideshowContainer.style.transform = `translateY(${scrollPos * 0.4}px)`;
             }
         });
 
@@ -369,11 +400,13 @@
             
             if (hash === '#map') {
                 initPublicMap();
-                // Die gestaffelten Timeouts wurden entfernt. Der ResizeObserver übernimmt das jetzt deterministisch.
+                setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 50);
+                setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 300);
             }
             if (hash === '#edit') {
                 initEditMap();
-                // Die gestaffelten Timeouts wurden entfernt. Der ResizeObserver übernimmt das jetzt deterministisch.
+                setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, 50);
+                setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, 300);
             }
             if (hash === '#admin') loadGallery();
             if (hash === '#home') initSlideshow();
@@ -457,17 +490,21 @@
                         await new Promise(r => setTimeout(r, 2000 * (i + 1)));
                         continue;
                     }
-                    
                     if (!res.ok) {
                         await new Promise(r => setTimeout(r, 1000 * (i + 1)));
                         continue;
                     }
 
                     const data = await res.json();
-                    
                     if (data.elements && data.elements.length > 0) { 
                         const el = data.elements[0]; 
-                        return { lat: el.lat || el.center.lat, lon: el.lon || el.center.lon, name: el.tags.name }; 
+                        // FIX: Abgesichertes Auslesen von lat/lon auch bei verschachtelten Relationen
+                        const lat = el.lat ?? el.center?.lat;
+                        const lon = el.lon ?? el.center?.lon;
+                        
+                        if (lat == null || lon == null) return null;
+
+                        return { lat: parseFloat(lat), lon: parseFloat(lon), name: el.tags?.name || icao }; 
                     } else {
                         return null; 
                     }
@@ -476,26 +513,12 @@
                     await new Promise(r => setTimeout(r, 1000 * (i + 1)));
                 }
             }
-            return null; 
-        }
-
-        // Robuste Lösung für Map-Resizing (ersetzt die Timeouts)
-        function observeMapResize(mapInstance, containerId) {
-            const container = document.getElementById(containerId);
-            if (!container || !window.ResizeObserver) return;
-            const observer = new ResizeObserver(() => {
-                // Leaflet nur neu berechnen, wenn der Container auch reale Dimensionen hat
-                if (container.clientWidth > 0 && container.clientHeight > 0) {
-                    requestAnimationFrame(() => mapInstance.invalidateSize());
-                }
-            });
-            observer.observe(container);
+            return null;
         }
 
         // --- 5. ÖFFENTLICHE KARTE ---
         let publicMarkers = [], publicLines = [], publicActiveMarker = null, mapLocCache = {};
         let currentSheetFlights = []; let currentSheetIcao = null;
-        /* Standard Blau für inaktive Pins, Rot für ausgewählte Pins */
         const defIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#3b82f6" class="w-8 h-8 drop-shadow-md"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [32, 32], iconAnchor: [16, 32] });
         const actIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#ef4444" class="w-10 h-10 drop-shadow-lg"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [40, 40], iconAnchor: [20, 40] });
 
@@ -504,17 +527,34 @@
                 publicMapInstance = L.map('publicMap', { zoomControl: false }).setView([50.0, 10.0], 5); L.control.zoom({ position: 'topleft' }).addTo(publicMapInstance); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(publicMapInstance);
                 publicMapInstance.on('click', () => { document.getElementById('bottomSheet').classList.add('translate-y-full'); resetMapHighlights(); });
                 
-                // Beobachter anhängen: Reagiert auf Menüklicks und Handy-Rotationen
-                observeMapResize(publicMapInstance, 'publicMap');
-                
+                // FIX: Error Callback hinzugefügt, damit das nicht einfach "still" fehlschlägt
                 onSnapshot(collection(db, "locations"), (snapshot) => {
                     publicMarkers.forEach(m => publicMapInstance.removeLayer(m)); publicMarkers = []; mapLocCache = {};
+                    
                     snapshot.forEach((doc) => {
-                        const loc = doc.data(); mapLocCache[doc.id] = loc;
+                        const loc = doc.data(); 
+                        
+                        // FIX: Strikte Validierung der Koordinaten! Verhindert, dass L.marker abstürzt und die restlichen Pins blockiert.
+                        if (!loc || typeof loc.lat !== 'number' || typeof loc.lon !== 'number' || isNaN(loc.lat) || isNaN(loc.lon)) {
+                            console.warn(`Ort übersprungen (Fehlerhafte Koordinaten): ${doc.id}`, loc);
+                            return; // Springt im forEach zum nächsten Eintrag
+                        }
+                        
+                        mapLocCache[doc.id] = loc;
                         if ((loc.landings || 0) === 0 && (loc.departures || 0) === 0) return;
+                        
                         const m = L.marker([loc.lat, loc.lon], { icon: defIcon }).addTo(publicMapInstance);
-                        m.on('click', () => openSheet(doc.id, loc.name, m, loc.lat, loc.lon)); publicMarkers.push(m);
+                        
+                        // FIX: L.DomEvent.stopPropagation hinzugefügt. Verhindert Event-Bubbling, das sonst das Sheet sofort wieder schließt.
+                        m.on('click', (e) => {
+                            L.DomEvent.stopPropagation(e);
+                            openSheet(doc.id, loc.name, m, loc.lat, loc.lon);
+                        }); 
+                        
+                        publicMarkers.push(m);
                     });
+                }, (error) => {
+                    console.error("Firebase Snapshot Error (Locations):", error);
                 });
             }
         }
@@ -555,7 +595,7 @@
                     if (fCoords && tCoords) {
                         const mLat = (fCoords.lat + tCoords.lat)/2, mLng = (fCoords.lon + tCoords.lon)/2; const cLat = mLat - (tCoords.lon - fCoords.lon)*0.2, cLng = mLng + (tCoords.lat - fCoords.lat)*0.2;
                         let pts = []; for(let t=0; t<=1; t+=0.05) pts.push([(1-t)*(1-t)*fCoords.lat + 2*(1-t)*t*cLat + t*t*tCoords.lat, (1-t)*(1-t)*fCoords.lon + 2*(1-t)*t*cLng + t*t*tCoords.lon]);
-                        const lineColor = isOutgoing ? '#3b82f6' : '#ef4444'; // Blau für Abflug, Rot für Ankunft
+                        const lineColor = isOutgoing ? '#3b82f6' : '#ef4444';
                         publicLines.push(L.polyline(pts, {color: lineColor, weight: 3, opacity: 0.8, dashArray: '8,8'}).addTo(publicMapInstance));
                         const midIdx = Math.floor(pts.length / 2); const p1 = publicMapInstance.latLngToLayerPoint(pts[midIdx - 1]); const p2 = publicMapInstance.latLngToLayerPoint(pts[midIdx + 1]);
                         const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
@@ -600,13 +640,7 @@
 
         // --- 6. EDITOR ---
         function initEditMap() {
-            if (!editMapInstance) { 
-                editMapInstance = L.map('editMap').setView([50.0, 10.0], 5); 
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(editMapInstance); 
-                
-                // Beobachter für die Editor-Karte anhängen
-                observeMapResize(editMapInstance, 'editMap');
-            }
+            if (!editMapInstance) { editMapInstance = L.map('editMap').setView([50.0, 10.0], 5); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(editMapInstance); }
             if(!document.getElementById('date').value) document.getElementById('date').valueAsDate = new Date();
         }
 
@@ -683,7 +717,6 @@
                 const icaos = new Set();
                 const parsingErrors = [];
 
-                // 1. Parsing & Formatanalyse
                 lines.forEach((line, index) => {
                     const parts = line.split(',');
                     if(parts.length >= 6) {
@@ -708,7 +741,6 @@
                 
                 stat.innerHTML = `${flights.length} Flüge analysiert. Prüfe ${icaos.size} Flughäfen...`;
                 
-                // 2. Flughäfen prüfen (Pre-Flight Check)
                 const resolvedLocations = {};
                 const newLocationsToSave = [];
                 const missingIcaos = [];
@@ -726,7 +758,6 @@
                         } else {
                             missingIcaos.push(icao);
                         }
-                        // Reduzierte künstliche Verzögerung auf 0,5s, da Retry-Logik als Sicherheitsnetz dient
                         await new Promise(r => setTimeout(r, 500));
                     }
                 }
@@ -735,7 +766,6 @@
                     throw new Error(`<b>Fehlende Flughäfen:</b><br>Folgende ICAO-Codes wurden in der API nicht gefunden:<br><span class="font-mono text-red-600">${missingIcaos.join(', ')}</span><br><br>Bitte korrigiere die Schreibweise oder lege sie zuerst manuell an. Import abgebrochen.`);
                 }
 
-                // 3. Datenbank-Import (nur wenn vorher alles fehlerfrei war)
                 stat.innerHTML = `Alle Flughäfen validiert. Speichere neue Flughäfen...`;
                 for(let newLoc of newLocationsToSave) {
                     await setDoc(doc(db, "locations", newLoc.id), newLoc.data);
@@ -755,7 +785,6 @@
                 stat.className = "text-green-600 mt-3 font-semibold text-sm bg-green-50 p-3 rounded-lg border border-green-200"; 
                 document.getElementById('importCsvData').value = '';
             } catch (e) { 
-                // Abfangen von explizit geworfenen HTML-Fehlern oder reinen Systemfehlern
                 const errorContent = e.message.includes('<b>') ? e.message : `<b>Systemfehler:</b><br>${e.message}`;
                 stat.innerHTML = errorContent; 
                 stat.className = "text-red-700 mt-3 text-sm bg-red-50 p-4 rounded-lg border border-red-200 shadow-sm leading-relaxed"; 
