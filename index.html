@@ -120,7 +120,8 @@
     <section id="view-home" class="view-section active overflow-y-auto scroll-smooth">
         <header class="relative bg-gray-900 h-[60vh] md:h-[70vh] overflow-hidden flex items-center justify-center shrink-0">
             <!-- Das Slideshow-Div wird via JavaScript für den Parallax-Effekt verschoben -->
-            <div id="slideshow" class="absolute inset-0 w-full h-full transform will-change-transform">
+            <!-- FIX: Container ist jetzt 140% hoch und nach oben versetzt, damit beim Parallax keine Lücke entsteht -->
+            <div id="slideshow" class="absolute -top-[20%] left-0 w-full h-[140%] transform will-change-transform">
                 <img id="img-slide-fallback" src="" class="slide active">
                 <div class="absolute inset-0 bg-black/40 z-0"></div>
             </div>
@@ -266,97 +267,24 @@
     <!-- ========================================== -->
     <!-- VIEW: ÖFFENTLICHE KARTE (#map)             -->
     <!-- ========================================== -->
-    <section id="view-map" class="view-section relative bg-gray-200 overflow-hidden w-full block" style="height: calc(100dvh - 64px);">
-        <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
-        
-        <div id="bottomSheet" class="absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[10] max-h-[85vh] flex flex-col">
-            <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center sticky top-0 bg-white rounded-t-3xl gap-2">
-                <div><h2 id="sheetTitle" class="text-lg sm:text-xl font-bold text-gray-800">Flughafen</h2><p id="sheetSubtitle" class="text-xs sm:text-sm text-gray-500">Lade...</p></div>
-                <div class="flex items-center gap-2 self-end sm:self-auto">
-                    <select id="sortSelect" class="bg-gray-100 text-gray-700 border-none rounded-lg px-2 py-2 text-xs sm:text-sm outline-none cursor-pointer hidden">
-                        <option value="date">Nach Datum</option>
-                        <option value="frequency">Nach Häufigkeit</option>
-                    </select>
-                    <button id="closeSheetBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">✕</button>
-                </div>
-            </div>
-            <div id="sheetContent" class="p-4 overflow-y-auto flex-grow bg-gray-50 h-[300px]"></div>
-        </div>
-    </section>
-
-    <!-- ========================================== -->
-    <!-- VIEW: LOGIN (#login)                       -->
-    <!-- ========================================== -->
-    <section id="view-login" class="view-section items-center justify-center bg-gray-100 px-4" style="height: calc(100dvh - 64px);">
-        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center">
-            <h3 class="text-2xl font-bold mb-6 text-gray-800">Mitglieds-Login</h3>
-            <input type="text" id="loginUsername" placeholder="Benutzername" class="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required>
-            <input type="password" id="loginPassword" placeholder="Passwort" class="w-full mb-4 p-3 border rounded-lg outline-none focus:border-blue-500" required>
+    <section id="view-map" class="view-section bg-gray-100 w-full block p-2 sm:p-6 lg:p-4" style="height: calc(100dvh - 64px);">
+        <!-- Eingebetteter Rahmen für die Karte -->
+        <div class="relative w-full h-full bg-gray-200 rounded-2xl sm:rounded-3xl shadow-lg border border-gray-200 overflow-hidden">
+            <div id="publicMap" class="w-full h-full absolute inset-0 z-0"></div>
             
-            <button id="actionLoginBtn" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg transition-colors">Einloggen</button>
-            <div class="my-4 border-t border-gray-200 relative"><span class="absolute top-[-10px] left-1/2 transform -translate-x-1/2 bg-white px-2 text-gray-400 text-sm">oder</span></div>
-            <button id="actionGoogleBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors">Mit Google anmelden</button>
-            <div id="loginErrorMsg" class="text-red-500 mt-4 text-sm font-semibold"></div>
-        </div>
-    </section>
-
-    <!-- ========================================== -->
-    <!-- VIEW: FLUG EINTRAGEN (#edit)               -->
-    <!-- ========================================== -->
-    <section id="view-edit" class="view-section p-4 flex-col md:flex-row gap-4 bg-gray-100 overflow-y-auto" style="height: calc(100dvh - 64px);">
-        <div class="bg-white w-full md:w-[400px] flex-shrink-0 p-6 rounded-2xl shadow-md flex flex-col h-auto md:h-full overflow-y-auto z-10">
-            <h3 class="text-xl font-bold text-gray-800 mb-6 shrink-0">Neuen Flug eintragen</h3>
-            <div class="space-y-4 flex-grow">
-                <div><label class="label">Start (ICAO)</label><input type="text" id="fromIcao" class="input-field uppercase" maxlength="4" required><div id="fromResult" class="text-xs mt-1 h-4"></div></div>
-                <div><label class="label">Ziel (ICAO)</label><input type="text" id="toIcao" class="input-field uppercase" maxlength="4" required><div id="toResult" class="text-xs mt-1 h-4"></div></div>
-                <div class="grid grid-cols-1 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <div><label class="label">Datum</label><input type="date" id="date" class="input-field bg-white" required></div>
-                    <div class="flex gap-4">
-                        <div class="w-1/2"><label class="label">Startzeit</label><input type="time" id="startTime" class="input-field bg-white"></div>
-                        <div class="w-1/2"><label class="label">Landezeit</label><input type="time" id="endTime" class="input-field bg-white"></div>
+            <!-- Bottom Sheet muss sich jetzt im Rahmen befinden, nicht mehr am Bildschirmrand -->
+            <div id="bottomSheet" class="absolute bottom-0 left-0 w-full bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-t-2xl sm:rounded-t-3xl transform translate-y-full transition-transform duration-300 z-[10] max-h-[85%] flex flex-col">
+                <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center sticky top-0 bg-white rounded-t-2xl sm:rounded-t-3xl gap-2">
+                    <div><h2 id="sheetTitle" class="text-lg sm:text-xl font-bold text-gray-800">Flughafen</h2><p id="sheetSubtitle" class="text-xs sm:text-sm text-gray-500">Lade...</p></div>
+                    <div class="flex items-center gap-2 self-end sm:self-auto">
+                        <select id="sortSelect" class="bg-gray-100 text-gray-700 border-none rounded-lg px-2 py-2 text-xs sm:text-sm outline-none cursor-pointer hidden">
+                            <option value="date">Nach Datum</option>
+                            <option value="frequency">Nach Häufigkeit</option>
+                        </select>
+                        <button id="closeSheetBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">✕</button>
                     </div>
                 </div>
-                <div><label class="label">Notizen</label><textarea id="notes" rows="2" class="input-field resize-none"></textarea></div>
-            </div>
-            <div class="mt-6 shrink-0">
-                <button id="saveFlightBtn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow disabled:opacity-50">Speichern</button>
-                <div id="saveFlightStatus" class="text-center text-sm font-semibold h-5 mt-2"></div>
-            </div>
-        </div>
-        <div class="flex-grow rounded-2xl overflow-hidden shadow-md border border-gray-200 min-h-[300px] md:min-h-[400px] relative w-full z-0">
-            <div id="editMap" class="w-full h-full absolute inset-0 z-0"></div>
-        </div>
-    </section>
-
-    <!-- ========================================== -->
-    <!-- VIEW: ADMIN DASHBOARD (#admin)             -->
-    <!-- ========================================== -->
-    <section id="view-admin" class="view-section p-4 bg-gray-100 overflow-y-auto">
-        <div class="max-w-5xl mx-auto w-full">
-            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-md border border-gray-100 mb-8 mt-2 sm:mt-4">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-6">fly-cardinal Admin Dashboard</h2>
-                
-                <div class="bg-gray-50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-gray-300 mb-6 text-center">
-                    <h3 class="font-bold text-gray-700 mb-2">Slideshow Bilder hochladen</h3>
-                    <input type="file" id="imageUpload" accept="image/*" class="hidden">
-                    <label for="imageUpload" class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow inline-block mb-3">Bild auswählen</label>
-                    <p id="fileName" class="text-sm text-gray-500 mb-4 truncate w-full">Kein Bild ausgewählt</p>
-                    <button id="uploadCloudinaryBtn" class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow disabled:opacity-50" disabled>Hochladen</button>
-                    <div id="uploadStatus" class="mt-3 font-semibold text-sm h-5"></div>
-                </div>
-
-                <h3 class="font-bold text-gray-700 mb-3">Aktuelle Bilder in der Slideshow:</h3>
-                <div id="imagesGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-12"></div>
-                
-                <hr class="border-gray-200 mb-8">
-
-                <div class="bg-blue-50 p-4 sm:p-6 rounded-xl border border-blue-200">
-                    <h3 class="font-bold text-blue-900 mb-2 text-lg sm:text-xl">CSV Massen-Import (Flüge)</h3>
-                    <p class="text-xs sm:text-sm text-blue-700 mb-4">Format: <code class="bg-blue-100 px-1 rounded break-all">Datum,Wer ist geflogen,Start,Landung,Start,Landung</code></p>
-                    <textarea id="importCsvData" rows="6" class="w-full p-3 border border-blue-300 rounded-lg outline-none focus:border-blue-500 mb-4 font-mono text-xs sm:text-sm" placeholder="Füge hier deine Zeilen ein..."></textarea>
-                    <button id="runImportBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-colors disabled:opacity-50">Daten analysieren & importieren</button>
-                    <div id="importStatus" class="mt-3 font-semibold text-sm"></div>
-                </div>
+                <div id="sheetContent" class="p-4 overflow-y-auto flex-grow bg-gray-50 h-[300px]"></div>
             </div>
         </div>
     </section>
@@ -426,10 +354,14 @@
         const viewHome = document.getElementById('view-home');
         const slideshowContainer = document.getElementById('slideshow');
         
-        viewHome.addEventListener('scroll', () => {
-            const scrollPos = viewHome.scrollTop;
-            if (scrollPos < window.innerHeight) {
-                slideshowContainer.style.transform = `translateY(${scrollPos * 0.4}px)`;
+        // FIX: Event Listener muss ans window gehängt werden, da der Body das Scrollen übernimmt
+        window.addEventListener('scroll', () => {
+            // Nur berechnen, wenn die Startseite auch aktiv ist (Performance-Schutz)
+            if (viewHome.classList.contains('active')) {
+                const scrollPos = window.scrollY || document.documentElement.scrollTop;
+                if (scrollPos < window.innerHeight) {
+                    slideshowContainer.style.transform = `translateY(${scrollPos * 0.4}px)`;
+                }
             }
         });
 
