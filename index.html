@@ -6,6 +6,21 @@
     <title>fly-cardinal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cardinal: {
+                            50: '#fdf3f3', 100: '#fce4e5', 200: '#f8cacc', 300: '#f3a2a6',
+                            400: '#ec6a71', 500: '#e53e45', 600: '#d52226', 700: '#b2191d',
+                            800: '#94171a', 900: '#7a181a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -48,10 +63,10 @@
                 
                 <!-- Desktop Menü -->
                 <div class="hidden md:flex md:items-center md:space-x-6 lg:space-x-8">
-                    <a href="#home" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Start</a>
-                    <a href="#map" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Flugkarte</a>
-                    <a href="#crew" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Crew</a>
-                    <a href="#flieger" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Der Flieger</a>
+                    <a href="#home" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Start</a>
+                    <a href="#map" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Flugkarte</a>
+                    <a href="#crew" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Crew</a>
+                    <a href="#flieger" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Der Flieger</a>
                     
                     <!-- Admin Links -->
                     <div id="authMenu" class="hidden items-center space-x-4 border-l pl-4 border-gray-300/50">
@@ -77,10 +92,10 @@
 
         <!-- Mobile Menü Container -->
         <div id="mobileMenu" class="hidden flex-col md:hidden bg-white/95 backdrop-blur-md absolute w-full left-0 top-[64px] shadow-xl border-t border-gray-100/50 z-[9999]">
-            <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Start</a>
-            <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Flugkarte</a>
-            <a href="#crew" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Crew</a>
-            <a href="#flieger" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Der Flieger</a>
+            <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Start</a>
+            <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Flugkarte</a>
+            <a href="#crew" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Crew</a>
+            <a href="#flieger" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Der Flieger</a>
             
             <div id="mobileAuthMenu" class="hidden flex-col bg-gray-50/80">
                 <a href="#edit" class="px-6 py-4 text-green-600 font-bold border-b border-gray-200/50">+ Flug eintragen</a>
@@ -88,14 +103,14 @@
                 <button id="mobileNavLogoutBtn" class="text-left px-6 py-4 text-red-600 font-bold hover:bg-red-50/50">Abmelden</button>
             </div>
 
-            <a href="#login" id="mobileNavLoginBtn" class="px-6 py-4 text-blue-600 font-bold bg-blue-50/80 hover:bg-blue-100">Mitglied Login</a>
+            <a href="#login" id="mobileNavLoginBtn" class="px-6 py-4 text-cardinal-600 font-bold bg-cardinal-50/80 hover:bg-cardinal-100">Mitglied Login</a>
         </div>
     </nav>
 
     <!-- VIEW: STARTSEITE (#home) -->
     <section id="view-home" class="view-section active overflow-y-auto scroll-smooth">
         <header class="relative bg-gray-900 h-[60vh] md:h-[70vh] overflow-hidden flex items-center justify-center shrink-0">
-            <div id="slideshow" class="absolute inset-0 w-full h-full transform will-change-transform">
+            <div id="slideshow" class="absolute -top-[20%] left-0 w-full h-[140%] transform will-change-transform">
                 <img id="img-slide-fallback" src="" class="slide active">
                 <div class="absolute inset-0 bg-black/40 z-0"></div>
             </div>
@@ -173,7 +188,7 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent z-0"></div>
         <div class="relative z-10 flex flex-col items-center justify-end h-full px-4 pb-12 w-full">
             <div class="text-center space-y-6 w-full flex flex-col items-center">
-                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="h-16 md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+                <img id="img-crew-logo" src="" alt="fly-cardinal Logo" class="hidden md:block md:h-20 w-auto mb-2 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
                 <h2 class="text-sm md:text-base font-bold text-white/70 tracking-[0.3em] uppercase drop-shadow-md">Kontakt</h2>
                 <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 w-full">
                     <a href="mailto:cs@fly-cardinal.de" class="text-lg md:text-xl font-light text-white hover:text-blue-300 transition-colors drop-shadow-lg">cs@fly-cardinal.de</a>
@@ -380,10 +395,12 @@
         const viewHome = document.getElementById('view-home');
         const slideshowContainer = document.getElementById('slideshow');
         
-        viewHome.addEventListener('scroll', () => {
-            const scrollPos = viewHome.scrollTop;
-            if (scrollPos < window.innerHeight) {
-                slideshowContainer.style.transform = `translateY(${scrollPos * 0.4}px)`;
+        window.addEventListener('scroll', () => {
+            if (viewHome.classList.contains('active')) {
+                const scrollPos = window.scrollY || document.documentElement.scrollTop;
+                if (scrollPos < window.innerHeight) {
+                    slideshowContainer.style.transform = `translateY(${scrollPos * 0.4}px)`;
+                }
             }
         });
 
@@ -400,13 +417,11 @@
             
             if (hash === '#map') {
                 initPublicMap();
-                setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 50);
-                setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, 300);
+                [10, 50, 200, 500].forEach(t => setTimeout(() => { if(publicMapInstance) publicMapInstance.invalidateSize(); }, t));
             }
             if (hash === '#edit') {
                 initEditMap();
-                setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, 50);
-                setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, 300);
+                [10, 50, 200, 500].forEach(t => setTimeout(() => { if(editMapInstance) editMapInstance.invalidateSize(); }, t));
             }
             if (hash === '#admin') loadGallery();
             if (hash === '#home') initSlideshow();
