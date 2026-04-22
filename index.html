@@ -6,6 +6,28 @@
     <title>fly-cardinal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cardinal: {
+                            50: '#fdf3f3',
+                            100: '#fce4e5',
+                            200: '#f8cacc',
+                            300: '#f3a2a6',
+                            400: '#ec6a71',
+                            500: '#e53e45',
+                            600: '#d52226', /* Dein gewünschtes Rot */
+                            700: '#b2191d',
+                            800: '#94171a',
+                            900: '#7a181a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -35,7 +57,6 @@
 <body class="flex flex-col min-h-[100dvh]">
 
     <!-- GEMEINSAME NAVIGATION (Überarbeitet mit Glassmorphism) -->
-    <!-- Analyse: Eine komplett weiße Navbar schneidet den Bildschirm hart ab. Glassmorphism schafft visuelle Tiefe. -->
     <nav class="sticky top-0 z-[10000] w-full h-[64px] bg-white/70 backdrop-blur-md shadow-sm border-b border-gray-200/50 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -49,11 +70,10 @@
                 
                 <!-- Desktop Menü -->
                 <div class="hidden md:flex md:items-center md:space-x-6 lg:space-x-8">
-                    <!-- Links mit dezentem Unterstrich-Hover -->
-                    <a href="#home" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Start</a>
-                    <a href="#map" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Flugkarte</a>
-                    <a href="#crew" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Crew</a>
-                    <a href="#flieger" class="nav-link relative text-gray-700 hover:text-blue-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Der Flieger</a>
+                    <a href="#home" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Start</a>
+                    <a href="#map" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Flugkarte</a>
+                    <a href="#crew" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Crew</a>
+                    <a href="#flieger" class="nav-link relative text-gray-700 hover:text-cardinal-600 font-medium transition-colors after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-cardinal-600 after:origin-bottom-right after:transition-transform hover:after:scale-x-100 hover:after:origin-bottom-left pb-1">Der Flieger</a>
                     
                     <!-- Admin Links -->
                     <div id="authMenu" class="hidden items-center space-x-4 border-l pl-4 border-gray-300/50">
@@ -79,10 +99,10 @@
 
         <!-- Mobile Menü Container (Glassmorphism) -->
         <div id="mobileMenu" class="hidden flex-col md:hidden bg-white/95 backdrop-blur-md absolute w-full left-0 top-[64px] shadow-xl border-t border-gray-100/50 z-[9999]">
-            <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Start</a>
-            <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Flugkarte</a>
-            <a href="#crew" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Crew</a>
-            <a href="#flieger" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-blue-50/50">Der Flieger</a>
+            <a href="#home" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Start</a>
+            <a href="#map" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Flugkarte</a>
+            <a href="#crew" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Crew</a>
+            <a href="#flieger" class="px-6 py-4 text-gray-700 font-medium border-b border-gray-100/50 hover:bg-cardinal-50/50">Der Flieger</a>
             
             <div id="mobileAuthMenu" class="hidden flex-col bg-gray-50/80">
                 <a href="#edit" class="px-6 py-4 text-green-600 font-bold border-b border-gray-200/50">+ Flug eintragen</a>
@@ -90,7 +110,7 @@
                 <button id="mobileNavLogoutBtn" class="text-left px-6 py-4 text-red-600 font-bold hover:bg-red-50/50">Abmelden</button>
             </div>
 
-            <a href="#login" id="mobileNavLoginBtn" class="px-6 py-4 text-blue-600 font-bold bg-blue-50/80 hover:bg-blue-100">Mitglied Login</a>
+            <a href="#login" id="mobileNavLoginBtn" class="px-6 py-4 text-cardinal-600 font-bold bg-cardinal-50/80 hover:bg-cardinal-100">Mitglied Login</a>
         </div>
     </nav>
 
@@ -112,8 +132,8 @@
                     <a href="#map" class="group flex items-center gap-3 sm:gap-4 px-3 sm:px-5 py-2 sm:py-3 bg-white rounded-full shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 active:scale-95 cursor-pointer max-w-full">
                         
                         <!-- Flugzeug-Icon in einem soliden farbigen Kreis -->
-                        <div class="relative flex items-center justify-center shrink-0 bg-blue-50 text-blue-600 p-2.5 sm:p-3 rounded-full group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
-                            <!-- Nur vertikale Animation: group-hover:-translate-y-1.5 -->
+                        <div class="relative flex items-center justify-center shrink-0 bg-cardinal-50 text-cardinal-600 p-2.5 sm:p-3 rounded-full group-hover:bg-cardinal-600 group-hover:text-white transition-colors duration-300">
+                            <!-- Nur vertikale Animation -->
                             <svg class="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 group-hover:-translate-y-1.5" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
                             </svg>
@@ -121,7 +141,7 @@
                         
                         <div class="flex flex-col text-left overflow-hidden pr-2 sm:pr-4">
                             <span class="text-lg sm:text-xl font-bold tracking-tight text-gray-900 truncate">Interaktive Karte</span>
-                            <span class="text-[10px] sm:text-xs text-gray-500 font-medium group-hover:text-blue-600 transition-colors truncate">Flüge & Routen ansehen &rarr;</span>
+                            <span class="text-[10px] sm:text-xs text-gray-500 font-medium group-hover:text-cardinal-600 transition-colors truncate">Flüge & Routen ansehen &rarr;</span>
                         </div>
                     </a>
                 </div>
@@ -408,9 +428,7 @@
         
         viewHome.addEventListener('scroll', () => {
             const scrollPos = viewHome.scrollTop;
-            // Nur berechnen, wenn man im Bereich des Headers ist (Performance)
             if (scrollPos < window.innerHeight) {
-                // Verschiebt den Bild-Container langsamer nach unten als der Nutzer scrollt
                 slideshowContainer.style.transform = `translateY(${scrollPos * 0.4}px)`;
             }
         });
@@ -502,7 +520,6 @@
 
         // --- 4. MAP HELPER ---
         async function fetchOverpass(icao, retries = 3) {
-            // Nutzung verschiedener Overpass-Instanzen, um Rate-Limits zu umgehen
             const endpoints = [
                 'https://overpass-api.de/api/interpreter',
                 'https://lz4.overpass-api.de/api/interpreter',
@@ -514,14 +531,12 @@
                     const endpoint = endpoints[i % endpoints.length];
                     const res = await fetch(`${endpoint}?data=${encodeURIComponent(`[out:json];(node["icao"="${icao}"];way["icao"="${icao}"];relation["icao"="${icao}"];);out center;`)}`);
                     
-                    // Abfangen von Rate Limits (Too Many Requests)
                     if (res.status === 429) {
                         console.warn(`Rate limit (429) für ${icao}. Warte ${(i+1)*2}s und wechsle Server...`);
                         await new Promise(r => setTimeout(r, 2000 * (i + 1)));
                         continue;
                     }
                     
-                    // Abfangen von Serverfehlern (z.B. 502 Bad Gateway)
                     if (!res.ok) {
                         await new Promise(r => setTimeout(r, 1000 * (i + 1)));
                         continue;
@@ -533,21 +548,20 @@
                         const el = data.elements[0]; 
                         return { lat: el.lat || el.center.lat, lon: el.lon || el.center.lon, name: el.tags.name }; 
                     } else {
-                        // API antwortet sauber, aber Code existiert nicht -> Kein Retry nötig
                         return null; 
                     }
                 } catch(e) { 
-                    // Fängt Netzwerkfehler oder gescheitertes JSON-Parsing ab
                     if (i === retries - 1) return null;
                     await new Promise(r => setTimeout(r, 1000 * (i + 1)));
                 }
             }
-            return null; // Alle Retries aufgebraucht
+            return null; 
         }
 
         // --- 5. ÖFFENTLICHE KARTE ---
         let publicMarkers = [], publicLines = [], publicActiveMarker = null, mapLocCache = {};
         let currentSheetFlights = []; let currentSheetIcao = null;
+        /* Standard Blau für inaktive Pins, Rot für ausgewählte Pins */
         const defIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#3b82f6" class="w-8 h-8 drop-shadow-md"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [32, 32], iconAnchor: [16, 32] });
         const actIcon = L.divIcon({ className: 'bg-transparent', html: `<svg viewBox="0 0 24 24" fill="#ef4444" class="w-10 h-10 drop-shadow-lg"><path d="M12 0c-4.198 0-8 3.403-8 7.602 0 4.198 3.469 9.21 8 16.398 4.531-7.188 8-12.2 8-16.398 0-4.199-3.801-7.602-8-7.602zm0 11c-1.657 0-3-1.343-3-3s1.343-3 3-3 3 1.343 3 3-1.343 3-3 3z"/></svg>`, iconSize: [40, 40], iconAnchor: [20, 40] });
 
@@ -603,7 +617,7 @@
                     if (fCoords && tCoords) {
                         const mLat = (fCoords.lat + tCoords.lat)/2, mLng = (fCoords.lon + tCoords.lon)/2; const cLat = mLat - (tCoords.lon - fCoords.lon)*0.2, cLng = mLng + (tCoords.lat - fCoords.lat)*0.2;
                         let pts = []; for(let t=0; t<=1; t+=0.05) pts.push([(1-t)*(1-t)*fCoords.lat + 2*(1-t)*t*cLat + t*t*tCoords.lat, (1-t)*(1-t)*fCoords.lon + 2*(1-t)*t*cLng + t*t*tCoords.lon]);
-                        const lineColor = isOutgoing ? '#3b82f6' : '#ef4444';
+                        const lineColor = isOutgoing ? '#3b82f6' : '#ef4444'; // Blau für Abflug, Rot für Ankunft
                         publicLines.push(L.polyline(pts, {color: lineColor, weight: 3, opacity: 0.8, dashArray: '8,8'}).addTo(publicMapInstance));
                         const midIdx = Math.floor(pts.length / 2); const p1 = publicMapInstance.latLngToLayerPoint(pts[midIdx - 1]); const p2 = publicMapInstance.latLngToLayerPoint(pts[midIdx + 1]);
                         const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
