@@ -501,12 +501,48 @@
         }
 
         // --- 4. MAP HELPER ---
-        async function fetchOverpass(icao) {
-            try {
-                const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(`[out:json];(node["icao"="${icao}"];way["icao"="${icao}"];relation["icao"="${icao}"];);out center;`)}`);
-                const data = await res.json();
-                if(data.elements.length > 0) { const el = data.elements[0]; return { lat: el.lat || el.center.lat, lon: el.lon || el.center.lon, name: el.tags.name }; }
-            } catch(e) {} return null;
+        async function fetchOverpass(icao, retries = 3) {
+            // Nutzung verschiedener Overpass-Instanzen, um Rate-Limits zu umgehen
+            const endpoints = [
+                'https://overpass-api.de/api/interpreter',
+                'https://lz4.overpass-api.de/api/interpreter',
+                'https://overpass.kumi.systems/api/interpreter'
+            ];
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const endpoint = endpoints[i % endpoints.length];
+                    const res = await fetch(`${endpoint}?data=${encodeURIComponent(`[out:json];(node["icao"="${icao}"];way["icao"="${icao}"];relation["icao"="${icao}"];);out center;`)}`);
+                    
+                    // Abfangen von Rate Limits (Too Many Requests)
+                    if (res.status === 429) {
+                        console.warn(`Rate limit (429) für ${icao}. Warte ${(i+1)*2}s und wechsle Server...`);
+                        await new Promise(r => setTimeout(r, 2000 * (i + 1)));
+                        continue;
+                    }
+                    
+                    // Abfangen von Serverfehlern (z.B. 502 Bad Gateway)
+                    if (!res.ok) {
+                        await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+                        continue;
+                    }
+
+                    const data = await res.json();
+                    
+                    if (data.elements && data.elements.length > 0) { 
+                        const el = data.elements[0]; 
+                        return { lat: el.lat || el.center.lat, lon: el.lon || el.center.lon, name: el.tags.name }; 
+                    } else {
+                        // API antwortet sauber, aber Code existiert nicht -> Kein Retry nötig
+                        return null; 
+                    }
+                } catch(e) { 
+                    // Fängt Netzwerkfehler oder gescheitertes JSON-Parsing ab
+                    if (i === retries - 1) return null;
+                    await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+                }
+            }
+            return null; // Alle Retries aufgebraucht
         }
 
         // --- 5. ÖFFENTLICHE KARTE ---
@@ -732,8 +768,8 @@
                         } else {
                             missingIcaos.push(icao);
                         }
-                        // Künstliche Verzögerung, um die öffentliche API nicht zu überlasten
-                        await new Promise(r => setTimeout(r, 1000));
+                        // Reduzierte künstliche Verzögerung auf 0,5s, da Retry-Logik als Sicherheitsnetz dient
+                        await new Promise(r => setTimeout(r, 500));
                     }
                 }
 
